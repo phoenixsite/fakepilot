@@ -1,21 +1,18 @@
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build-meta"
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "fakepilot"
+version="0.0.1"
 description = "Scrapping tool for Trustpilot"
 readme = {file = "README.md", content-type = "text/markdown"}
-requires-python = ">=3.7"
 license = {file = "LICENSE"}
 dependencies = [
-beautifulsoup4
-requests
+"beautifulsoup4",
+"requests",
+"lxml"
 ]
-dynamic = ["version"]
 
 [project.urls]
 repository = "https://github.com/phoenixsite/fakepilot"
-
-[tool.setuptools.dynamic]
-version = {attr = "fakepilot.VERSION"}

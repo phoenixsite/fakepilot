@@ -1,102 +1,95 @@
 import urllib.request as request
 from bs4 import BeautifulSoup
 import re
+from datetime import datetime
+
+from .utils import (get_url, SEARCH_EXT)
+from .query import (
+    prepare_tquery,
+    parse_query)
+
+from .xray import (
+    extract_name,
+    extract_rating_stats,
+    extract_url,
+    extract_location_info,
+    extract_author,
+    extract_date,
+    extract_rating,
+    extract_content)
 
 PARSER = 'lxml'
 
-HTTP_PROT = "https"
-BASE_URL = "trustpilot.com"
-SEARCH_EXT = "/search?query="
+def find_business_node(parsed_page, field_query):
+    """Get the HTML nodes that contains the business information"""
 
-# Search results vary between countries
-COUNTRY_CODE = ["us", "uk", "es", "dk",
-                   "at", "ch", "de", "au",
-                   "ca", "ie", "nz", "fi",
-                   "fr-be", "fr", "it",
-                   "jp", "no", "nl", "pl", "br",
-                   "pt", "se"]
-COUNTRY_NAMES = ["united states", "united kingdom", "españa",
-                      "danmark", "österreich", "schweiz",
-                      "deutschland", "australia", "canada",
-                      "ireland", "new zealand", "suomi",
-                      "belgique", "france", "italia",
-                      "japan", "norge", "nederland", "polska",
-                      "brasil", "portugal", "sverige"]
-COUNTRIES = dict(zip(COUNTRY_NAMES, COUNTRY_CODE))
+    nodes =  parsed_page.find_all(href=re.compile("/review/"))
 
-def get_url(country):
-    """Get the URL of Trustpilot site given the country"""
+    if 'city' in field_query:
 
-    country = country.casefold()
-    country_code = COUNTRIES[country]
-    if not country_code:
-        raise Exception("""The selected country is not available in
-        Trustpilot""")
+        nodes = [node for node in nodes
+                           if extract_location_info(node)
+                 and re.search(
+                     field_query['city'],
+                     extract_location_info(node)['city'],
+                     re.IGNORECASE)
+                 and re.search(
+                     field_query['country'],
+                     extract_location_info(node)['country'],
+                     re.IGNORECASE)]
 
-    return f"{HTTP_PROT}://{country_code}.{BASE_URL}"
+    if 'name' in field_query:
+        nodes = [node for node in nodes
+                 if re.search(field_query['name'], extract_name(node), re.IGNORECASE)]
+    return nodes
 
-def prepare_query(base_query):
-    """Transform the query so it is compatible with the search pattern
-    used in a Trustpilot URL"""
-    base_query = base_query.replace(" ", "+")
-    return base_query
+def find_review_nodes(parsed_page):
+    """Get the HTML nodes that cotains the reviews of a business"""
+    return parsed_page.find_all(class_=re.compile("styles_reviewCardInner"))
 
-def find_business_node(parsed_page):
-    """Get the HTML business card list"""
-    return parsed_page.find_all(href=re.compile("/review/"))
 
-class Business:
+class Review:
 
     def __init__(self, tag):
 
+        self.author = extract_author(tag)
+        self.star_rating = extract_rating(tag)
+        self.date = extract_date(tag)
+        self.content = extract_content(tag)
+
+    def __str__(self):
+        
+        string = f"Author: {self.author}\nRating: {self.star_rating}\n"\
+            f"Date: {self.date}\nContent: {self.content}"
+        return string
+
+    
+class Business:
+
+    def __init__(self, tag, site_url):
+
+        self.reviews = None
         self.country = None
         self.city = None
         self.nreviews = None
         self.score = None
+        self.site_url = site_url
 
-        self.url = tag.get('href').removeprefix('/review/')
+        self.url = extract_url(tag)
         self.url_country = self.url.split('.')[-1]
+        self.name = extract_name(tag)
 
-        name_tag = tag.find_all('p',
-                                class_=re.compile('typography_heading'))[0]
-        self.name = name_tag.string
+        stats = extract_rating_stats(tag)
 
-        rating_section = tag.find_all(class_=re.compile('styles_rating'))
+        if stats:
+            self.score = stats['score']
+            self.nreviews = stats['nreviews']
 
-        # Check if rating business info is shown
-        if rating_section:
+        loc_info = extract_location_info(tag)
 
-            rating_section = rating_section[0]
-            score_string = rating_section.find_all(
-                class_=re.compile('styles_trustScore'))[0].strings
-
-            # Attribute strings is a generator and it is needed only the
-            # last element: the score number
-            score_string = [string for string in score_string][-1]
-            self.score = float(score_string)
-        
-            nreviews_string = rating_section.find_all(
-                string=re.compile(r'[\d,]'))[-1]
-
-            # When there is just one review, there is no HTML comment,
-            # so the previuos regex result in '1 review'. This situation
-            # is checked manually
-            if len(nreviews_string.split()) > 1:
-                nreviews_string = nreviews_string.split()[0]
-                
-            nreviews_string = nreviews_string.replace(",", "")
-            self.nreviews = int(nreviews_string)
-
-        location_section = tag.find_all(class_=re.compile('styles_location'))
-
-        # Check if location business info is shown
-        if location_section:
-            location_section = location_section[0]
-
-            # Contain HTML comments in the middle of the string
-            # so this must be deleted
-            location = [string for string in location_section.strings]
-            self.city, self.country = location[0], location[-1]
+        if loc_info:
+            self.city = loc_info['city']
+            self.country = loc_info['country']
 
     def __str__(self):
         string = f"Name: {self.name}\nURL: {self.url}\n"\
@@ -108,26 +101,34 @@ class Business:
             string += f"City: {self.city}\n"
         if self.country:
             string += f"Country: {self.country}\n"
+
+        if self.reviews:
+            string += "Reviews:\n"
+
+            for count, review in enumerate(self.reviews):
+                string += f"Review {count}:\n{review}\n"
+                
         return string
 
-    
+    def get_review_url(self):
+        return f"{self.site_url}/review/{self.url}"
+
+    def extract_reviews(self):
+        r = request.urlopen(self.get_review_url())
+        parsed_page = BeautifulSoup(r, PARSER)
+        nodes = find_review_nodes(parsed_page)
+        self.reviews = [Review(node) for node in nodes]
+
 def make_query(url, query):
 
-    r = request.urlopen(f"{url}{SEARCH_EXT}{query}")
+    field_query = parse_query(query)
+    string_query = prepare_tquery(field_query)
+    r = request.urlopen(f"{url}{SEARCH_EXT}{string_query}")
     parsed_page = BeautifulSoup(r, PARSER)
-    nodes = find_business_node(parsed_page)
-    return [Business(node) for node in nodes]
-    
+    nodes = find_business_node(parsed_page, field_query)
+    return [Business(node, url) for node in nodes]
+
 def search_sites(country, query):
     """"""
     url = get_url(country)
-    query = prepare_query(query)
     return make_query(url, query)
-    
-if __name__ == '__main__':
-
-    country = "united kingdom"
-    query = "burger y ahora"
-    businesses = search_sites(country, query)
-    for business in businesses:
-        print(business)
