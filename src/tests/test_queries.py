@@ -52,3 +52,7 @@ class TestSearchQueries(unittest.TestCase):
         businesses = search_sites(country, query)
         for business in businesses:
             print(business)
+
+        business = businesses[0]
+        business.extract_reviews()
+        print(business.reviews[0])

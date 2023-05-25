@@ -7,6 +7,7 @@ the data is displayed.
 from bs4 import BeautifulSoup
 import re
 from datetime import datetime
+from urllib.parse import urlparse, parse_qs
 
 def extract_url(tag):
     """Extract the business URL"""
@@ -103,3 +104,65 @@ def extract_content(tag):
             content += string.encode()
 
     return content
+
+def get_npages(tag):
+    """
+    Get the number of pages of results.
+
+    If there are more than five result pages,
+    then a three-dot button is displayed and the last
+    button will have a 'pagination-button-last' name attribute.
+    If not, then the button name attribute will be numbered
+    """
+
+    # Number of elements that must be in the result page buttons before
+    # the three-dotted button appears. It is set to five plus the next and
+    # previuos page buttons
+    MAX_ELEMENTS = 7
+
+    npage_button_section = tag.find(
+        'nav', class_=re.compile('pagination_pagination'))
+
+
+    nelements = len(npage_button_section.contents)
+    
+    if nelements > MAX_ELEMENTS:
+        page_button = npage_button_section.find(attrs={'name':'pagination-button-last'})
+        npages = int(parse_qs(urlparse(page_button['href']).query)['page'][0])
+    else:
+        page_button = npage_button_section.contents[nelements - 2]
+        npages = int(re.search(r"\d", page_button['name']).group())
+
+    return npages
+    
+def find_business_nodes(parsed_page, field_query, nbusiness):
+    """Get the HTML nodes that contains the business information"""
+
+    max_npages = get_npages(parsed_page)
+    nodes =  parsed_page.find_all(href=re.compile("/review/"))
+
+    if 'city' in field_query:
+
+        nodes = [node for node in nodes
+                           if extract_location_info(node)
+                 and re.search(
+                     field_query['city'],
+                     extract_location_info(node)['city'],
+                     re.IGNORECASE)
+                 and re.search(
+                     field_query['country'],
+                     extract_location_info(node)['country'],
+                     re.IGNORECASE)]
+
+    if 'name' in field_query:
+        nodes = [node for node in nodes
+                 if re.search(
+                         field_query['name'],
+                         extract_name(node),
+                         re.IGNORECASE)]
+    return nodes
+
+def find_review_nodes(parsed_page):
+    """Get the HTML nodes that cotains the reviews of a business"""
+    return parsed_page.find_all(
+        class_=re.compile("styles_reviewCardInner"))

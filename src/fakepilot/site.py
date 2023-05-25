@@ -16,40 +16,12 @@ from .xray import (
     extract_author_id,
     extract_date,
     extract_rating,
-    extract_content)
+    extract_content,
+    find_business_nodes,
+    find_review_nodes
+)
 
 PARSER = 'lxml'
-
-def find_business_node(parsed_page, field_query):
-    """Get the HTML nodes that contains the business information"""
-
-    nodes =  parsed_page.find_all(href=re.compile("/review/"))
-
-    if 'city' in field_query:
-
-        nodes = [node for node in nodes
-                           if extract_location_info(node)
-                 and re.search(
-                     field_query['city'],
-                     extract_location_info(node)['city'],
-                     re.IGNORECASE)
-                 and re.search(
-                     field_query['country'],
-                     extract_location_info(node)['country'],
-                     re.IGNORECASE)]
-
-    if 'name' in field_query:
-        nodes = [node for node in nodes
-                 if re.search(
-                         field_query['name'],
-                         extract_name(node),
-                         re.IGNORECASE)]
-    return nodes
-
-def find_review_nodes(parsed_page):
-    """Get the HTML nodes that cotains the reviews of a business"""
-    return parsed_page.find_all(
-        class_=re.compile("styles_reviewCardInner"))
 
 
 class Review:
@@ -125,16 +97,16 @@ class Business:
         nodes = find_review_nodes(parsed_page)
         self.reviews = [Review(node) for node in nodes]
 
-def make_query(url, query):
+def make_query(url, query, nbusiness):
 
     field_query = parse_query(query)
     string_query = prepare_tquery(field_query)
     r = request.urlopen(f"{url}{SEARCH_EXT}{string_query}")
     parsed_page = BeautifulSoup(r, PARSER)
-    nodes = find_business_node(parsed_page, field_query)
+    nodes = find_business_node(parsed_page, field_query, nbusiness)
     return [Business(node, url) for node in nodes]
 
-def search_sites(country, query):
+def search_sites(country, query, nbusiness=None):
     """"""
     url = get_url(country)
-    return make_query(url, query)
+    return make_query(url, query, nbusiness)
