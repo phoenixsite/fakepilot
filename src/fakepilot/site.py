@@ -1,7 +1,6 @@
 import urllib.request as request
 from bs4 import BeautifulSoup
 import re
-from datetime import datetime
 
 from .utils import (get_url, SEARCH_EXT)
 from .query import (
@@ -13,7 +12,8 @@ from .xray import (
     extract_rating_stats,
     extract_url,
     extract_location_info,
-    extract_author,
+    extract_author_name,
+    extract_author_id,
     extract_date,
     extract_rating,
     extract_content)
@@ -40,27 +40,33 @@ def find_business_node(parsed_page, field_query):
 
     if 'name' in field_query:
         nodes = [node for node in nodes
-                 if re.search(field_query['name'], extract_name(node), re.IGNORECASE)]
+                 if re.search(
+                         field_query['name'],
+                         extract_name(node),
+                         re.IGNORECASE)]
     return nodes
 
 def find_review_nodes(parsed_page):
     """Get the HTML nodes that cotains the reviews of a business"""
-    return parsed_page.find_all(class_=re.compile("styles_reviewCardInner"))
+    return parsed_page.find_all(
+        class_=re.compile("styles_reviewCardInner"))
 
 
 class Review:
 
     def __init__(self, tag):
-
-        self.author = extract_author(tag)
+        
+        self.author_name = extract_author_name(tag)
+        self.author_id = extract_author_id(tag)
         self.star_rating = extract_rating(tag)
         self.date = extract_date(tag)
         self.content = extract_content(tag)
 
     def __str__(self):
         
-        string = f"Author: {self.author}\nRating: {self.star_rating}\n"\
-            f"Date: {self.date}\nContent: {self.content}"
+        string = f"Author name: {self.author_name}\nAuthor id: {self.author_id}\n"
+        string += f"Rating: {self.star_rating}\n"
+        string += f"Date: {self.date}\nContent: {self.content}"
         return string
 
     

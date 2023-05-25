@@ -6,10 +6,11 @@ the data is displayed.
 
 from bs4 import BeautifulSoup
 import re
+from datetime import datetime
 
 def extract_url(tag):
     """Extract the business URL"""
-    return tag.get('href').removeprefix('/review')
+    return tag.get('href').removeprefix('/review/')
 
 def extract_name(tag):
     """Extract the business name"""
@@ -65,11 +66,17 @@ def extract_location_info(tag):
 
     return loc_info
 
-def extract_author(tag):
+def extract_author_name(tag):
     """Extract the review author name"""
     consumer_node = tag.find(
         attrs={"data-consumer-name-typography": "true"})
     return consumer_node.string.title()
+
+def extract_author_id(tag):
+    """Extract the review author id"""
+    consumer_node = tag.find(
+        attrs={"data-consumer-profile-link": "true"})
+    return consumer_node.get('href').removeprefix('/users/')
 
 def extract_rating(tag):
     """Extract the rating given in the review"""
