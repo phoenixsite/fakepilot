@@ -1,7 +1,10 @@
 import unittest
 from fakepilot.xray import (
-    get_npages
+    get_npages,
+    find_business_nodes
     )
+
+from fakepilot.utils import get_url
 
 from bs4 import BeautifulSoup
 import urllib.request as request
@@ -26,5 +29,15 @@ class TestXray(unittest.TestCase):
         parsed_pages = [BeautifulSoup(request.urlopen(url), PARSER) for url in urls]
         results = [get_npages(page) for page in parsed_pages]
         self.assertEqual(results, solutions)
+
+    def test_find_business_nodes(self):
+
+        string_query = 'granada'
+        url = get_url("Espana")
+        nbusinesses = [2, 5, 10, 13, 25, 50]
+
+        for nbusiness in nbusinesses:
+            nodes = find_business_nodes(url, string_query, {}, nbusiness)
+            self.assertEqual(nbusiness, len(nodes))
         
             

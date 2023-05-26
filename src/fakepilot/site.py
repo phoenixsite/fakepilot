@@ -2,7 +2,7 @@ import urllib.request as request
 from bs4 import BeautifulSoup
 import re
 
-from .utils import (get_url, SEARCH_EXT)
+from .utils import get_url
 from .query import (
     prepare_tquery,
     parse_query)
@@ -101,9 +101,7 @@ def make_query(url, query, nbusiness):
 
     field_query = parse_query(query)
     string_query = prepare_tquery(field_query)
-    r = request.urlopen(f"{url}{SEARCH_EXT}{string_query}")
-    parsed_page = BeautifulSoup(r, PARSER)
-    nodes = find_business_node(parsed_page, field_query, nbusiness)
+    nodes = find_business_node(url, string_query, field_query, nbusiness)
     return [Business(node, url) for node in nodes]
 
 def search_sites(country, query, nbusiness=None):

@@ -4,10 +4,16 @@ site. It checks different HTML and CSS elements to find where
 the data is displayed.
 """
 
+import urllib.request as request
+from urllib.parse import urlparse, parse_qs
 from bs4 import BeautifulSoup
 import re
 from datetime import datetime
-from urllib.parse import urlparse, parse_qs
+
+from .utils import SEARCH_EXT
+
+PARSER = 'lxml'
+
 
 def extract_url(tag):
     """Extract the business URL"""
@@ -115,51 +121,61 @@ def get_npages(tag):
     If not, then the button name attribute will be numbered
     """
 
-    # Number of elements that must be in the result page buttons before
-    # the three-dotted button appears. It is set to five plus the next and
-    # previuos page buttons
-    MAX_ELEMENTS = 7
-
     npage_button_section = tag.find(
         'nav', class_=re.compile('pagination_pagination'))
 
+    last_page_button = npage_button_section.find(
+        attrs={'name':'pagination-button-last'})
 
-    nelements = len(npage_button_section.contents)
+    if not last_page_button:
+        last_page_button = npage_button_section.contents[-2]
+
+    # If a KeyError is raised, then the last button doesn't have a href
+    # attribute, so there is only one page
+    try:
+        npages = int(parse_qs(urlparse(last_page_button['href']).query)['page'][0])
+    except KeyError:
+        npages = 1
     
-    if nelements > MAX_ELEMENTS:
-        page_button = npage_button_section.find(attrs={'name':'pagination-button-last'})
-        npages = int(parse_qs(urlparse(page_button['href']).query)['page'][0])
-    else:
-        page_button = npage_button_section.contents[nelements - 2]
-        npages = int(re.search(r"\d", page_button['name']).group())
-
     return npages
     
-def find_business_nodes(parsed_page, field_query, nbusiness):
+def find_business_nodes(url, string_query, field_query, nbusiness):
     """Get the HTML nodes that contains the business information"""
 
+    r = request.urlopen(f"{url}{SEARCH_EXT}{string_query}")
+    parsed_page = BeautifulSoup(r, PARSER)
+
     max_npages = get_npages(parsed_page)
-    nodes =  parsed_page.find_all(href=re.compile("/review/"))
+    current_page, nodes = 1, []
+    
+    while current_page <= max_npages and len(nodes) < nbusiness:
 
-    if 'city' in field_query:
+        nodes.extend(parsed_page.find_all(href=re.compile("/review/"), limit=(nbusiness - len(nodes))))
 
-        nodes = [node for node in nodes
-                           if extract_location_info(node)
-                 and re.search(
-                     field_query['city'],
-                     extract_location_info(node)['city'],
-                     re.IGNORECASE)
-                 and re.search(
-                     field_query['country'],
-                     extract_location_info(node)['country'],
-                     re.IGNORECASE)]
+        if 'city' in field_query:
 
-    if 'name' in field_query:
-        nodes = [node for node in nodes
-                 if re.search(
-                         field_query['name'],
-                         extract_name(node),
+            nodes = [node for node in nodes
+                     if extract_location_info(node)
+                     and re.search(
+                         field_query['city'],
+                         extract_location_info(node)['city'],
+                         re.IGNORECASE)
+                     and re.search(
+                         field_query['country'],
+                         extract_location_info(node)['country'],
                          re.IGNORECASE)]
+
+        if 'name' in field_query:
+            nodes = [node for node in nodes
+                     if re.search(
+                             field_query['name'],
+                             extract_name(node),
+                             re.IGNORECASE)]
+
+        current_page += 1
+        r = request.urlopen(f"{url}{SEARCH_EXT}{string_query}&page={current_page}")
+        parsed_page = BeautifulSoup(r, PARSER)
+        
     return nodes
 
 def find_review_nodes(parsed_page):
