@@ -130,10 +130,12 @@ def get_npages(tag):
     if not last_page_button:
         last_page_button = npage_button_section.contents[-2]
 
-    # If a KeyError is raised, then the last button doesn't have a href
-    # attribute, so there is only one page
+    # If a KeyError is raised, then the last button attribute href does
+    # not have a query parameter named 'page', which means there is only
+    # one page
     try:
-        npages = int(parse_qs(urlparse(last_page_button['href']).query)['page'][0])
+        npages = int(parse_qs(urlparse(
+            last_page_button['href']).query)['page'][0])
     except KeyError:
         npages = 1
     
@@ -150,11 +152,18 @@ def find_business_nodes(url, string_query, field_query, nbusiness):
     
     while current_page <= max_npages and len(nodes) < nbusiness:
 
-        nodes.extend(parsed_page.find_all(href=re.compile("/review/"), limit=(nbusiness - len(nodes))))
+        page_param = "" if current_page == 1 else f"&page={current_page}"
+        
+        r = request.urlopen(
+            f"{url}{SEARCH_EXT}{string_query}{page_param}")
+        parsed_page = BeautifulSoup(r, PARSER)
+
+        current_nodes = parsed_page.find_all(
+            href=re.compile("/review/"), limit=(nbusiness - len(nodes)))
 
         if 'city' in field_query:
 
-            nodes = [node for node in nodes
+            current_nodes = [node for node in current_nodes
                      if extract_location_info(node)
                      and re.search(
                          field_query['city'],
@@ -166,19 +175,37 @@ def find_business_nodes(url, string_query, field_query, nbusiness):
                          re.IGNORECASE)]
 
         if 'name' in field_query:
-            nodes = [node for node in nodes
+            current_nodes = [node for node in current_nodes
                      if re.search(
                              field_query['name'],
                              extract_name(node),
                              re.IGNORECASE)]
 
+        nodes.extend(current_nodes)
         current_page += 1
-        r = request.urlopen(f"{url}{SEARCH_EXT}{string_query}&page={current_page}")
-        parsed_page = BeautifulSoup(r, PARSER)
         
     return nodes
 
-def find_review_nodes(parsed_page):
+def find_review_nodes(url, nreviews):
     """Get the HTML nodes that cotains the reviews of a business"""
-    return parsed_page.find_all(
-        class_=re.compile("styles_reviewCardInner"))
+
+    r = request.urlopen(url)
+    parsed_page = BeautifulSoup(r, PARSER)
+
+    max_npages = get_npages(parsed_page)
+    current_page, nodes = 1, []
+
+    while current_page <= max_npages and len(nodes) < nreviews:
+
+        page_param = "" if current_page == 1 else f"&page={current_page}"
+
+        r = request.urlopen(f"{url}{page_param}")
+        parsed_page = BeautifulSoup(r, PARSER)
+
+        nodes.extend(parsed_page.find_all(
+            class_=re.compile("styles_reviewCardInner"),
+            limit=(nreviews - len(nodes))))
+
+        current_page += 1
+
+    return nodes

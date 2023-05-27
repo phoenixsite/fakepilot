@@ -1,7 +1,8 @@
 import unittest
 from fakepilot.xray import (
     get_npages,
-    find_business_nodes
+    find_business_nodes,
+    find_review_nodes
     )
 
 from fakepilot.utils import get_url
@@ -40,4 +41,11 @@ class TestXray(unittest.TestCase):
             nodes = find_business_nodes(url, string_query, {}, nbusiness)
             self.assertEqual(nbusiness, len(nodes))
         
-            
+    def test_find_review_nodes(self):
+
+        url = 'https://es.trustpilot.com/review/www.hsnstore.com?languages=all'
+        nreviews = [1, 2, 5, 15, 30, 50]
+
+        for nreview in nreviews:
+            nodes = find_review_nodes(url, nreview)
+            self.assertEqual(nreview, len(nodes))

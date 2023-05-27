@@ -1,6 +1,7 @@
-import urllib.request as request
-from bs4 import BeautifulSoup
-import re
+"""
+site.py defines the main operations that enable
+the access to the scrapped data.
+"""
 
 from .utils import get_url
 from .query import (
@@ -20,8 +21,6 @@ from .xray import (
     find_business_nodes,
     find_review_nodes
 )
-
-PARSER = 'lxml'
 
 
 class Review:
@@ -89,12 +88,11 @@ class Business:
         return string
 
     def get_review_url(self):
-        return f"{self.site_url}/review/{self.url}"
+        return f"{self.site_url}/review/{self.url}?languages=all"
 
-    def extract_reviews(self):
-        r = request.urlopen(self.get_review_url())
-        parsed_page = BeautifulSoup(r, PARSER)
-        nodes = find_review_nodes(parsed_page)
+    def extract_reviews(self, nreviews):
+        
+        nodes = find_review_nodes(self.get_review_url(), nreviews)
         self.reviews = [Review(node) for node in nodes]
 
 def make_query(url, query, nbusiness):
