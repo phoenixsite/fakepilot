@@ -99,7 +99,7 @@ def make_query(url, query, nbusiness):
 
     field_query = parse_query(query)
     string_query = prepare_tquery(field_query)
-    nodes = find_business_node(url, string_query, field_query, nbusiness)
+    nodes = find_business_nodes(url, string_query, field_query, nbusiness)
     return [Business(node, url) for node in nodes]
 
 def search_sites(country, query, nbusiness=None):
