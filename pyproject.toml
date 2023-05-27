@@ -10,8 +10,6 @@ readme = {file = "README.md", content-type = "text/markdown"}
 license = {file = "LICENSE"}
 dependencies = [
 "beautifulsoup4",
-"requests",
-"lxml",
 "urllib3==1.26.15"
 ]
 

@@ -12,7 +12,7 @@ from datetime import datetime
 
 from .utils import SEARCH_EXT
 
-PARSER = 'lxml'
+PARSER = 'html.parser'
 
 
 def extract_url(tag):
