@@ -102,7 +102,7 @@ def make_query(url, query, nbusiness):
     nodes = find_business_nodes(url, string_query, field_query, nbusiness)
     return [Business(node, url) for node in nodes]
 
-def search_sites(country, query, nbusiness=None):
+def search(query, country="united states", nbusiness=None):
     """"""
     url = get_url(country)
     return make_query(url, query, nbusiness)
