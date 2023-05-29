@@ -4,7 +4,7 @@ from fakepilot.query import (
     parse_query
     )
 from fakepilot import (
-    search_sites)
+    search)
 
 class TestSearchQueries(unittest.TestCase):
 
@@ -49,7 +49,7 @@ class TestSearchQueries(unittest.TestCase):
             print(business)
         """
         query += ', name: anglophone'
-        businesses = search_sites(country, query)
+        businesses = search(country, query)
         for business in businesses:
             print(business)
 
