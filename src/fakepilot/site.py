@@ -91,7 +91,7 @@ class Business:
         return f"{self.site_url}/review/{self.url}?languages=all"
 
     def extract_reviews(self, nreviews):
-        
+
         nodes = find_review_nodes(self.get_review_url(), nreviews)
         self.reviews = [Review(node) for node in nodes]
 

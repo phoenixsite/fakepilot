@@ -2,7 +2,10 @@ import unittest
 from fakepilot.xray import (
     get_npages,
     find_business_nodes,
-    find_review_nodes
+    find_review_nodes,
+    extract_name,
+    extract_rating_stats,
+    extract_contact_info
     )
 
 from fakepilot.utils import get_url
@@ -10,10 +13,49 @@ from fakepilot.utils import get_url
 from bs4 import BeautifulSoup
 import urllib.request as request
 
-PARSER = 'lxml'
+PARSER = 'html.parser'
 
 class TestXray(unittest.TestCase):
 
+    def test_extract_name(self):
+
+        urls = ['https://www.trustpilot.com/review/beautytheshop.com',
+                'https://www.trustpilot.com/review/www.granada.no']
+        solutions = ['BeautyTheShop', 'Granada AS']
+
+        rs = [BeautifulSoup(request.urlopen(url), PARSER) for url in urls]
+        names = [extract_name(r) for r in rs]
+        self.assertEqual(names, solutions)
+        
+    def test_extract_rating_stats(self):
+
+        urls = ['https://www.trustpilot.com/review/realpublicidad.com',
+                'https://www.trustpilot.com/review/www.hsnstore.com']
+
+        solutions = [(0, 0), (17173, 4.6)]
+        rs = [BeautifulSoup(request.urlopen(url), PARSER) for url in urls]
+        results = [extract_rating_stats(r) for r in rs]
+        self.assertEqual(solutions, results)
+
+    def test_extract_contact_info(self):
+
+        urls = ['https://www.trustpilot.com/review/beautytheshop.com',
+                'https://www.trustpilot.com/review/www.granada.no',
+                'https://www.trustpilot.com/review/djmania.es',
+                'https://www.trustpilot.com/review/www.burgerking.dk',
+                'https://www.trustpilot.com/review/burgerking.no',
+                'https://www.trustpilot.com/review/www.burgerking.fr'
+                ]
+
+        rs = [BeautifulSoup(request.urlopen(url), PARSER) for url in urls]
+
+        for r in rs:
+            contact_data = extract_contact_info(r)
+            for k in contact_data:
+                print(f"{k}: {contact_data[k]}")
+            print("------")
+        
+        
     def test_getnpages(self):
 
         urls = [
