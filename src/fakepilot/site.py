@@ -12,14 +12,17 @@ from .xray import (
     extract_name,
     extract_rating_stats,
     extract_url,
-    extract_location_info,
+    extract_contact_info,
+    extract_location_info_search,
+    extract_categories,
     extract_author_name,
     extract_author_id,
     extract_date,
     extract_rating,
     extract_content,
-    find_business_nodes,
-    find_review_nodes
+    find_business_urls,
+    find_review_nodes,
+    get_html_page
 )
 
 
@@ -43,30 +46,52 @@ class Review:
     
 class Business:
 
-    def __init__(self, tag, site_url):
+    def __init__(self, url, trustpilot_url):
 
         self.reviews = None
         self.country = None
         self.city = None
         self.nreviews = None
         self.score = None
-        self.site_url = site_url
+        self.categories = None
+        self.address = None
+        self.email = None
+        self.phone = None
+        self.address = None
+        self.site_url = trustpilot_url
 
-        self.url = extract_url(tag)
+        self.url = url
+
+        tag = get_html_page(url)
+        
         self.url_country = self.url.split('.')[-1]
         self.name = extract_name(tag)
 
-        stats = extract_rating_stats(tag)
+        self.nreviews, self.score = extract_rating_stats(tag)
 
-        if stats:
-            self.score = stats['score']
-            self.nreviews = stats['nreviews']
-
-        loc_info = extract_location_info(tag)
+        loc_info = extract_location_info_search(tag)
 
         if loc_info:
             self.city = loc_info['city']
             self.country = loc_info['country']
+
+        self.categories = extract_categories(tag)
+        contact_data = extract_contact_info(tag)
+
+        try:
+            self.email = contact_data['email']
+        except KeyError:
+            pass
+
+        try:
+            self.phone = contact_data['phone']
+        except KeyError:
+            pass
+
+        try:
+            self.address = contact_data['address']
+        except KeyError:
+            pass
 
     def __str__(self):
         string = f"Name: {self.name}\nURL: {self.url}\n"\
@@ -79,6 +104,22 @@ class Business:
         if self.country:
             string += f"Country: {self.country}\n"
 
+        if self.categories:
+            string += "Categories:\n"
+
+            for cat in self.categories:
+                string += f"\t{cat}\n"
+            string += "\n"
+
+        if self.email:
+            string += f"Email: {self.email}\n"
+
+        if self.phone:
+            string += f"Phone number: {self.phone}\n"
+            
+        if self.address:
+            string += f"Address: {self.address}\n"
+        
         if self.reviews:
             string += "Reviews:\n"
 
@@ -87,22 +128,44 @@ class Business:
                 
         return string
 
-    def get_review_url(self):
-        return f"{self.site_url}/review/{self.url}?languages=all"
-
     def extract_reviews(self, nreviews):
 
-        nodes = find_review_nodes(self.get_review_url(), nreviews)
+        nodes = find_review_nodes(self.url, nreviews)
         self.reviews = [Review(node) for node in nodes]
 
-def make_query(url, query, nbusiness):
+    def has_attr(self, required):
 
+        has = True
+        count = 0
+        import pdb; pdb.set_trace()
+        while has and count < len(required):
+
+            if required[count] == 'address':
+                has = self.address is not None
+            elif required[count] == 'phone':
+                has = self.phone is not None
+            elif required[count] == 'email':
+                has = self.email is not None
+            count += 1
+            
+        return has
+            
+
+def make_query(trustpilot_url, query, nbusiness, *restricted):
+    
     field_query = parse_query(query)
     string_query = prepare_tquery(field_query)
-    nodes = find_business_nodes(url, string_query, field_query, nbusiness)
-    return [Business(node, url) for node in nodes]
+    urls = find_business_urls(trustpilot_url, string_query, field_query, nbusiness)
+    businesses = [Business(url, trustpilot_url) for url in urls]
 
-def search(query, country="united states", nbusiness=None):
+    if restricted:
+        businesses = [b for b in businesses if b.has_attr(restricted)]
+    return businesses
+
+def search(query, country="united states", nbusiness=None, *restricted):
     """"""
-    url = get_url(country)
-    return make_query(url, query, nbusiness)
+    trustpilot_url = get_url(country)
+    print(restricted)
+    return make_query(trustpilot_url, query, nbusiness, *restricted)
+
+

@@ -1,11 +1,12 @@
 import unittest
 from fakepilot.xray import (
     get_npages,
-    find_business_nodes,
+    find_business_urls,
     find_review_nodes,
     extract_name,
     extract_rating_stats,
-    extract_contact_info
+    extract_contact_info,
+    extract_categories
     )
 
 from fakepilot.utils import get_url
@@ -32,7 +33,7 @@ class TestXray(unittest.TestCase):
         urls = ['https://www.trustpilot.com/review/realpublicidad.com',
                 'https://www.trustpilot.com/review/www.hsnstore.com']
 
-        solutions = [(0, 0), (17173, 4.6)]
+        solutions = [(0, 0), (17194, 4.6)]
         rs = [BeautifulSoup(request.urlopen(url), PARSER) for url in urls]
         results = [extract_rating_stats(r) for r in rs]
         self.assertEqual(solutions, results)
@@ -44,17 +45,46 @@ class TestXray(unittest.TestCase):
                 'https://www.trustpilot.com/review/djmania.es',
                 'https://www.trustpilot.com/review/www.burgerking.dk',
                 'https://www.trustpilot.com/review/burgerking.no',
-                'https://www.trustpilot.com/review/www.burgerking.fr'
+                'https://www.trustpilot.com/review/www.burgerking.fr',
+                'https://www.trustpilot.com/review/twenix.es',
+                'https://www.trustpilot.com/review/elejidoshopping.es'
                 ]
 
         rs = [BeautifulSoup(request.urlopen(url), PARSER) for url in urls]
 
-        for r in rs:
-            contact_data = extract_contact_info(r)
-            for k in contact_data:
-                print(f"{k}: {contact_data[k]}")
-            print("------")
+    def test_extract_categories(self):
+
+        urls = ['https://www.trustpilot.com/review/beautytheshop.com',
+                'https://www.trustpilot.com/review/www.granada.no',
+                'https://www.trustpilot.com/review/djmania.es',
+                'https://www.trustpilot.com/review/www.burgerking.dk',
+                'https://www.trustpilot.com/review/burgerking.no',
+                'https://www.trustpilot.com/review/www.burgerking.fr',
+                'https://www.trustpilot.com/review/twenix.es',
+                'https://www.trustpilot.com/review/elejidoshopping.es'
+                ]
+        solutions = [
+            ["Cosmetics and Perfumes Supplier",
+             "Cosmetics Store",
+             "Perfume Store"
+             ],
+            ["Business Administration Service",
+             "e-Commerce Service",
+             "Logistics Service",
+             "Online Marketplace",
+             "Translator",
+             "Warehouse"],
+            ["e-Commerce Service"],
+            ["Restaurant"],
+            [],
+            ["Restaurants & Bars"],
+            ["Educational Institution"],
+            []
+        ]
         
+        rs = [BeautifulSoup(request.urlopen(url), PARSER) for url in urls]
+        results = [extract_categories(r) for r in rs]
+        self.assertEqual(results, solutions)
         
     def test_getnpages(self):
 
@@ -73,15 +103,15 @@ class TestXray(unittest.TestCase):
         results = [get_npages(page) for page in parsed_pages]
         self.assertEqual(results, solutions)
 
-    def test_find_business_nodes(self):
+    def test_find_business_urls(self):
 
         string_query = 'granada'
         url = get_url("Espana")
         nbusinesses = [2, 5, 10, 13, 25, 50]
 
         for nbusiness in nbusinesses:
-            nodes = find_business_nodes(url, string_query, {}, nbusiness)
-            self.assertEqual(nbusiness, len(nodes))
+            urls = find_business_urls(url, string_query, {}, nbusiness)
+            self.assertEqual(nbusiness, len(urls))
         
     def test_find_review_nodes(self):
 

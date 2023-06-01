@@ -27,6 +27,11 @@ def extract_name(tag):
     name_tag = tag.find('h1', class_=re.compile('title_title'))
     return next(name_tag.find(class_=re.compile('title_displayName')).strings)
 
+def extract_name_search(tag):
+    """Extract the business name. Info extracted from the search page"""
+    name_tag = tag.find('p', class_=re.compile('styles_displayName'))
+    return name_tag.string
+    
 def extract_rating_stats(tag):
     """Extract the TrustScore and the number of reviews. Info extracted
     from the business page."""
@@ -42,7 +47,7 @@ def extract_rating_stats(tag):
     nreviews = int(nreviews)
     
     score_tag = tag.find(attrs={'data-rating-typography': 'true'})
-    score = float(score_tag.string)
+    score = float(score_tag.string.replace(",", "."))
     return nreviews, score
 
 def extract_location_info_search(tag):
@@ -64,6 +69,7 @@ def extract_location_info_search(tag):
         loc_info['country'] = location[-1].capitalize()
 
     return loc_info
+
 
 def extract_contact_info(tag):
     """Extract the contact information (address, phone number,
@@ -112,18 +118,28 @@ def extract_contact_info(tag):
 def extract_categories(tag):
     """Extract the categories of a business. Info extracted from the
     business page."""
-    pass
 
-def find_business_nodes(url, string_query, field_query, nbusiness):
-    """Get the HTML nodes that contains the business information"""
+    cat_section = tag.find(class_=re.compile('styles_categoriesList'))
+    categories = None
+    
+    if cat_section:
+        cat_refs = cat_section.findAll(href=re.compile('/categories/'))
+        categories = [cat_tag.string for cat_tag in cat_refs]
+        
+    return categories
+    
+
+def find_business_urls(url, string_query, field_query, nbusiness):
+    """Get the URLs of the businesses that matches the requested
+    query"""
 
     r = request.urlopen(f"{url}{SEARCH_EXT}{string_query}")
     parsed_page = BeautifulSoup(r, PARSER)
 
     max_npages = get_npages(parsed_page)
-    current_page, nodes = 1, []
+    current_page, urls = 1, []
     
-    while current_page <= max_npages and len(nodes) < nbusiness:
+    while current_page <= max_npages and len(urls) < nbusiness:
 
         page_param = "" if current_page == 1 else f"&page={current_page}"
         
@@ -132,32 +148,35 @@ def find_business_nodes(url, string_query, field_query, nbusiness):
         search_page = BeautifulSoup(r, PARSER)
 
         current_nodes = search_page.find_all(
-            href=re.compile("/review/"), limit=(nbusiness - len(nodes)))
+            href=re.compile("/review/"), limit=(nbusiness - len(urls)))
 
         if 'city' in field_query:
 
             current_nodes = [node for node in current_nodes
-                     if extract_location_info(node)
+                     if extract_location_info_search(node)
                      and re.search(
                          field_query['city'],
-                         extract_location_info(node)['city'],
+                         extract_location_info_search(node)['city'],
                          re.IGNORECASE)
                      and re.search(
                          field_query['country'],
-                         extract_location_info(node)['country'],
+                         extract_location_info_search(node)['country'],
                          re.IGNORECASE)]
 
         if 'name' in field_query:
             current_nodes = [node for node in current_nodes
                      if re.search(
                              field_query['name'],
-                             extract_name(node),
+                             extract_name_search(node),
                              re.IGNORECASE)]
 
-        nodes.extend(current_nodes)
+        urls.extend([f"{url}{node.get('href')}" for node in current_nodes])
         current_page += 1
         
-    return nodes
+    return urls
+
+def get_html_page(url):
+    return BeautifulSoup(request.urlopen(url), PARSER)
 
 def extract_author_name(tag):
     """Extract the review author name"""
@@ -185,14 +204,20 @@ def extract_date(tag):
 def extract_content(tag):
     """Extract the content or body of the review"""
 
-    review_content_node = tag.find(
+    content_node = tag.find(
         attrs={"data-service-review-text-typography": "true"})
 
-    if review_content_node.string:
-        content = review_content_node.string.encode()
+    if not content_node:
+
+        content_node = tag.find(
+            "h2",
+            attrs={"data-service-review-title-typography": "true"})
+
+    if content_node.string:
+        content = content_node.string.encode()
     else:
         content = bytes()
-        for string in review_content_node.strings:
+        for string in content_node.strings:
             content += string.encode()
 
     return content

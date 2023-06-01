@@ -41,18 +41,21 @@ class TestSearchQueries(unittest.TestCase):
 
     def test_business(self):
         
-        country = 'Espana'
+        country = 'espana'
         query = 'city: almería, country: españa'
-        """
-        businesses = search_sites(country, query)
-        for business in businesses:
-            print(business)
-        """
         query += ', name: anglophone'
-        businesses = search(country, query)
+        businesses = search(query, country, 5)
         for business in businesses:
+            business.extract_reviews(3)
             print(business)
+            print("\n")
 
-        business = businesses[0]
-        business.extract_reviews()
-        print(business.reviews[0])
+    def test_business(self):
+        
+        country = 'espana'
+        query = 'city: almería, country: españa'
+        businesses = search(query, country, 7, "phone")
+        for business in businesses:
+            business.extract_reviews(3)
+            print(business)
+            print("\n")
