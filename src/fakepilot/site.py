@@ -137,7 +137,7 @@ class Business:
 
         has = True
         count = 0
-        import pdb; pdb.set_trace()
+
         while has and count < len(required):
 
             if required[count] == 'address':
@@ -165,7 +165,6 @@ def make_query(trustpilot_url, query, nbusiness, *restricted):
 def search(query, country="united states", nbusiness=None, *restricted):
     """"""
     trustpilot_url = get_url(country)
-    print(restricted)
     return make_query(trustpilot_url, query, nbusiness, *restricted)
 
 
