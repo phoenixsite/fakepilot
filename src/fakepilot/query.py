@@ -5,9 +5,9 @@ def prepare_tquery(field_query):
     Transform the queries for each field so it is compatible with the
     search pattern used in a Trustpilot URL
 
-    If city is included, then the country is not included in the query
-    string. If country value is included, the city value would loose
-    relevance and a lot of business from other cities woulb be extracted.
+    If the city clause is included, then the country one is not, as
+    the city field value would loose relevance in the query and a
+    lot of business from other cities would be extracted.
     """
 
     if 'city' in field_query:

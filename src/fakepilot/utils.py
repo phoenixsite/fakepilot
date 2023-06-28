@@ -28,3 +28,13 @@ def get_url(country):
         Trustpilot""")
 
     return f"{HTTP_PROT}://{country_code}.{BASE_URL}"
+
+def get_countries():
+    """Get the human-readable list of countries available in Trustpilot"""
+
+    all_countries = [country.title() for country in COUNTRY_NAMES]
+    s = ", ".join(all_countries[:len(all_countries) - 1])
+    s = f"{s} and {all_countries[-1]}"
+    return s
+    
+    

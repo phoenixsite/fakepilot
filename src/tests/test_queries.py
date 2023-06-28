@@ -40,17 +40,18 @@ class TestSearchQueries(unittest.TestCase):
         self.assertEqual(parse_query(query), result)
 
     def test_business(self):
-        
+
         country = 'espana'
         query = 'city: almería, country: españa'
         query += ', name: anglophone'
         businesses = search(query, country, 5)
+        print(len(businesses))
         for business in businesses:
             business.extract_reviews(3)
             print(business)
             print("\n")
 
-    def test_business(self):
+    def test_business_required(self):
         
         country = 'espana'
         query = 'city: almería, country: españa'

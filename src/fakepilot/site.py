@@ -3,16 +3,22 @@ site.py defines the main operations that enable
 the access to the scrapped data.
 """
 
-from .utils import get_url
+__docformat__ = 'restructuredtext'
+
+from functools import reduce
+from .utils import get_url, get_countries
 from .query import (
     prepare_tquery,
     parse_query)
 
 from .xray import (
-    extract_name,
-    extract_rating_stats,
     extract_url,
-    extract_contact_info,
+    extract_name,
+    extract_nreviews,
+    extract_score,
+    extract_email,
+    extract_phone,
+    extract_address,
     extract_location_info_search,
     extract_categories,
     extract_author_name,
@@ -20,7 +26,7 @@ from .xray import (
     extract_date,
     extract_rating,
     extract_content,
-    find_business_urls,
+    find_companies_urls,
     find_review_nodes,
     get_html_page
 )
@@ -43,59 +49,32 @@ class Review:
         string += f"Date: {self.date}\nContent: {self.content}"
         return string
 
-    
-class Business:
+class Company:
 
-    def __init__(self, url, trustpilot_url):
+    def __init__(self, doc, trustpilot_url):
 
         self.reviews = None
         self.country = None
         self.city = None
-        self.nreviews = None
-        self.score = None
-        self.categories = None
-        self.address = None
-        self.email = None
-        self.phone = None
-        self.address = None
         self.site_url = trustpilot_url
 
-        self.url = url
+        self.url = extract_url(doc)
+        self.name = extract_name(doc)
+        self.nreviews, self.score = extract_nreviews(doc), extract_score(doc)
 
-        tag = get_html_page(url)
-        
-        self.url_country = self.url.split('.')[-1]
-        self.name = extract_name(tag)
+        #loc_info = extract_location_info_search(tag)
 
-        self.nreviews, self.score = extract_rating_stats(tag)
+        #if loc_info:
+        #    self.city = loc_info['city']
+        #    self.country = loc_info['country']
 
-        loc_info = extract_location_info_search(tag)
-
-        if loc_info:
-            self.city = loc_info['city']
-            self.country = loc_info['country']
-
-        self.categories = extract_categories(tag)
-        contact_data = extract_contact_info(tag)
-
-        try:
-            self.email = contact_data['email']
-        except KeyError:
-            pass
-
-        try:
-            self.phone = contact_data['phone']
-        except KeyError:
-            pass
-
-        try:
-            self.address = contact_data['address']
-        except KeyError:
-            pass
+        self.categories = extract_categories(doc)
+        self.email = extract_email(doc)
+        self.phone = extract_phone(doc)
+        self.address = extract_address(doc)
 
     def __str__(self):
-        string = f"Name: {self.name}\nURL: {self.url}\n"\
-        f"URL country code: {self.url_country}\n"
+        string = f"Name: {self.name}\nURL: {self.url}\n"
 
         if self.score:
             string += f"Score: {self.score}\n"
@@ -128,43 +107,71 @@ class Business:
                 
         return string
 
+    def get_company_url(self):
+        return f"{self.site_url}/review/{self.url}"
+
     def extract_reviews(self, nreviews):
 
-        nodes = find_review_nodes(self.url, nreviews)
+        nodes = find_review_nodes(self.get_company_url(), nreviews)
         self.reviews = [Review(node) for node in nodes]
+                
 
-    def has_attr(self, required):
+def has_attrs(doc, *attrs):
+    """
+    Check if all the attributes attrs are in the company page doc.
 
-        has = True
-        count = 0
+    :param doc: Extracted company page
+    :type doc: xray.CompanyDoc
+    :param attrs: Required attributes
+    :type attrs: list of str
+    :rparam True if all attrs is contained in doc, False otherwise.
+    """
+    attrs = list(attrs)
+    return reduce(lambda x, y: x and y, [attr in doc for attr in attrs], True)
+    
 
-        while has and count < len(required):
-
-            if required[count] == 'address':
-                has = self.address is not None
-            elif required[count] == 'phone':
-                has = self.phone is not None
-            elif required[count] == 'email':
-                has = self.email is not None
-            count += 1
-            
-        return has
-            
-
-def make_query(trustpilot_url, query, nbusiness, *restricted):
+def make_query(tp_url, query, ncompanies, *attrs):
     
     field_query = parse_query(query)
     string_query = prepare_tquery(field_query)
-    urls = find_business_urls(trustpilot_url, string_query, field_query, nbusiness)
-    businesses = [Business(url, trustpilot_url) for url in urls]
+    urls = find_companies_urls(tp_url, string_query,
+                              field_query, ncompanies)
+    
+    docs = [get_html_page(url) for url in urls]
+    docs = [doc for doc in docs if has_attrs(doc, *attrs)]
+    companies = [Company(doc, tp_url) for doc in docs]
 
-    if restricted:
-        businesses = [b for b in businesses if b.has_attr(restricted)]
-    return businesses
+    return companies
 
-def search(query, country="united states", nbusiness=None, *restricted):
-    """"""
-    trustpilot_url = get_url(country)
-    return make_query(trustpilot_url, query, nbusiness, *restricted)
+def search(query, country="united states", ncompanies=None, *attrs):
+    """
+    Search for companies with a given query.
+
+    Required attributes in every extracted company can be specified, so
+    a company that doesn't cotain any of these attributes will be
+    discarded.
+
+    :param query: Query string. It should contain at least one word and
+    query clauses can be specified (E.g. 'city: Los Angeles,
+    name: Burger').
+    :type query: str
+    :param country: Country name whose Trustpilot webite is used to
+    apply the query.
+    :type country: str
+    :param ncompanies: Maximum number of companies extracted.
+    :type ncompanies: int
+    :param attrs: Required attributes for every company.
+    :type attrs: list of str 
+    :rparam: List of extracted companies.
+    :rtype: list of Companies
+    """
+
+    if not query:
+        raise Exception("A query must be provided")
+    if not country:
+        raise Exception(f"A valid country should be provided. The available countries are: {get_countries()}")
+    
+    tp_url = get_url(country)
+    return make_query(tp_url, query, ncompanies, *attrs)
 
 

@@ -1,5 +1,5 @@
 """
-xray.py defines how the data is scrapped from the Trustpilot
+xray defines how the data is scrapped from the Trustpilot
 site. It checks different HTML and CSS elements to find where
 the data is displayed.
 """
@@ -15,125 +15,23 @@ from .utils import SEARCH_EXT
 PARSER = 'html.parser'
 
 
-def extract_url(tag):
-    """Extract the business URL. Info extracted from the
-    search page."""
-    return tag.get('href').removeprefix('/review/')
+def find_companies_urls(tp_url, string_query, field_query, nbusiness):
+    """
+    Get the Trustpilot urls of the companies that match the requested
+    query.
 
-def extract_name(tag):
-    """Extract the business name. Info extracted from
-    the business page."""
-    
-    name_tag = tag.find('h1', class_=re.compile('title_title'))
-    return next(name_tag.find(class_=re.compile('title_displayName')).strings)
+    :param tp_url: Trustpilot url
+    :type url: str
+    :param string_query: Prepared query string
+    :type string_query: str
+    :param field_query: Required values for each clause included in the
+    query.
+    :type field_query: dict of str, str
+    :rparam: Trustpilot companies urls that match the query.
+    :rtype: list of str
+    """
 
-def extract_name_search(tag):
-    """Extract the business name. Info extracted from the search page"""
-    name_tag = tag.find('p', class_=re.compile('styles_displayName'))
-    return name_tag.string
-    
-def extract_rating_stats(tag):
-    """Extract the TrustScore and the number of reviews. Info extracted
-    from the business page."""
-
-    nreviews_tag = tag.find(attrs={'data-reviews-count-typography': 'true'})
-    
-    if nreviews_tag.string:
-        nreviews = nreviews_tag.string.split()[0]
-    else:
-        nreviews = next(nreviews_tag.strings)
-
-    nreviews = nreviews.replace(',', "")
-    nreviews = int(nreviews)
-    
-    score_tag = tag.find(attrs={'data-rating-typography': 'true'})
-    score = float(score_tag.string.replace(",", "."))
-    return nreviews, score
-
-def extract_location_info_search(tag):
-    """Extract the business city and country location. Info extracted
-    from the search page."""
-
-    location_section = tag.find_all(class_=re.compile('styles_location'))
-    loc_info = None
-    
-    # Check if location business info is shown
-    if location_section:
-        loc_info = {}
-        location_section = location_section[0]
-
-        # Contain HTML comments in the middle of the string
-        # so this must be deleted
-        location = [string for string in location_section.strings]
-        loc_info['city'] = location[0].capitalize()
-        loc_info['country'] = location[-1].capitalize()
-
-    return loc_info
-
-
-def extract_contact_info(tag):
-    """Extract the contact information (address, phone number,
-    city, country, ...) of a busisness. Info extracted from the
-    business page."""
-
-    def is_sideColumn(css_class):
-        return css_class is not None and 'styles_sideColumnCard' in css_class and 'paper_paper' in css_class
-    
-    info_tag = tag.find(class_=is_sideColumn)
-    address_tag = info_tag.find('address')
-    
-    parsed_data = {}
-
-    if address_tag:
-
-        contact_elements = address_tag.findAll(
-            'li',
-            class_=re.compile('styles_contactInfoElement'))
-
-        reg_fields = [('phone', re.compile(r'^\+?\d[\d-]+')),
-                      ('email', re.compile(
-                          r'([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+')),
-                      ]
-        
-        for contact_info in contact_elements:
-
-            line = ",".join([s for s in contact_info.strings])
-            field = None
-            count = 0
-        
-            while not field and count < len(reg_fields):
-
-                if reg_fields[count][1].search(line):
-                    field = reg_fields[count][0]
-                
-                count += 1
-            
-            if not field:
-                field = 'address'
-            
-            parsed_data[field] = line
-
-    return parsed_data
-
-def extract_categories(tag):
-    """Extract the categories of a business. Info extracted from the
-    business page."""
-
-    cat_section = tag.find(class_=re.compile('styles_categoriesList'))
-    categories = None
-    
-    if cat_section:
-        cat_refs = cat_section.findAll(href=re.compile('/categories/'))
-        categories = [cat_tag.string for cat_tag in cat_refs]
-        
-    return categories
-    
-
-def find_business_urls(url, string_query, field_query, nbusiness):
-    """Get the URLs of the businesses that matches the requested
-    query"""
-
-    r = request.urlopen(f"{url}{SEARCH_EXT}{string_query}")
+    r = request.urlopen(f"{tp_url}{SEARCH_EXT}{string_query}")
     parsed_page = BeautifulSoup(r, PARSER)
 
     max_npages = get_npages(parsed_page)
@@ -144,7 +42,7 @@ def find_business_urls(url, string_query, field_query, nbusiness):
         page_param = "" if current_page == 1 else f"&page={current_page}"
         
         r = request.urlopen(
-            f"{url}{SEARCH_EXT}{string_query}{page_param}")
+            f"{tp_url}{SEARCH_EXT}{string_query}{page_param}")
         search_page = BeautifulSoup(r, PARSER)
 
         current_nodes = search_page.find_all(
@@ -170,16 +68,277 @@ def find_business_urls(url, string_query, field_query, nbusiness):
                              extract_name_search(node),
                              re.IGNORECASE)]
 
-        urls.extend([f"{url}{node.get('href')}" for node in current_nodes])
+        urls.extend([f"{tp_url}{node.get('href')}" for node in current_nodes])
         current_page += 1
         
     return urls
 
+def extract_name_search(doc):
+    """
+    Extract the company name from a search page.
+    """
+    
+    name_tag = doc.find('p', class_=re.compile('styles_displayName'))
+    return name_tag.string
+
+def extract_location_info_search(tag):
+    """
+    Extract the city and country location from the search page.
+    """
+
+    location_section = tag.find_all(class_=re.compile('styles_location'))
+    loc_info = None
+    
+    # Check if location business info is shown
+    if location_section:
+        loc_info = {}
+        location_section = location_section[0]
+
+        # Contain HTML comments in the middle of the string
+        # so this must be deleted
+        location = [string for string in location_section.strings]
+        loc_info['city'] = location[0].capitalize()
+        loc_info['country'] = location[-1].capitalize()
+
+    return loc_info
+
+
+class CompanyDoc(BeautifulSoup):
+    """
+    Represents the HTML page of a company as a BeautifulSoup data
+    structure.
+
+    Used to avoid double checkings when restrictions over the
+    attributes of a company are imposed.
+    """
+
+    def __init__(self, markup, parser):
+        BeautifulSoup.__init__(self, markup, parser)
+        self.attrs = {}
+
+    def __contains__(self, item):
+
+        if item == 'phone':
+            self.extract_phone()
+        elif item == 'email':
+            self.extract_email()
+        elif item == 'address':
+            self.extract_address()
+        elif item == 'categories':
+            self.extract_categories()
+        elif item == 'score':
+            self.extract_score()
+        elif item == 'nreviews':
+            self.extract_nreviews()
+        elif item == 'name':
+            self.extract_name()
+        
+        return item in self.attrs and self.attrs[item]
+
+    def extract_url(self):
+
+        if 'url' not in self.attrs:
+            business_url = self.find(class_=re.compile('styles_websiteUrl'))
+            url = ""
+
+            for string in business_url.strings:
+                url += string
+
+            self.attrs['url'] = url
+        return self.attrs['url']
+    
+    def extract_name(self):
+
+        if 'name' not in self.attrs:
+            name_tag = self.find('h1', class_=re.compile('title_title'))
+            self.attrs['name'] = next(name_tag.find(
+                class_=re.compile('title_displayName')).strings)
+
+        return self.attrs['name']
+    
+    def __extract_rating_stats(self):
+
+        if 'score' not in self.attrs or 'nreviews' not in self.attrs:
+            nreviews_tag = self.find(
+                attrs={'data-reviews-count-typography': 'true'})
+    
+            if nreviews_tag.string:
+                nreviews = nreviews_tag.string.split()[0]
+            else:
+                nreviews = next(nreviews_tag.strings)
+
+            nreviews = nreviews.replace(',', "")
+            nreviews = int(nreviews)
+    
+            score_tag = self.find(attrs={'data-rating-typography': 'true'})
+            score = float(score_tag.string.replace(",", "."))
+            self.attrs['nreviews'] = nreviews
+            self.attrs['score'] = score
+
+    def extract_nreviews(self):
+
+        self.__extract_rating_stats()
+        return self.attrs['nreviews']
+
+    def extract_score(self):
+
+        self.__extract_rating_stats()
+        return self.attrs['score']
+
+    def __extract_contact_info(self):
+        """
+        Extract the contact information (address, phone number,
+        city, country, ...) of a company.
+        """
+        
+        if 'email' not in self.attrs or 'phone' not in self.attrs or 'address' not in self.attrs:       
+            def is_sideColumn(css_class):
+                return css_class is not None and 'styles_sideColumnCard' in css_class and 'paper_paper' in css_class
+        
+            info_tag = self.find(class_=is_sideColumn)
+            address_tag = info_tag.find('address')
+        
+            parsed_data = {'phone': None, 'email': None, 'address': None}
+
+            if address_tag:
+
+                contact_elements = address_tag.findAll(
+                    'li',
+                    class_=re.compile('styles_contactInfoElement'))
+
+                reg_fields = [('phone', re.compile(r'^\+?\d[\d-]+')),
+                              ('email', re.compile(
+                                  r'([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+')),
+                              ]
+            
+                for contact_info in contact_elements:
+
+                    line = ",".join([s for s in contact_info.strings])
+                    field = None
+                    count = 0
+                
+                    while not field and count < len(reg_fields):
+
+                        if reg_fields[count][1].search(line):
+                            field = reg_fields[count][0]
+                        
+                        count += 1
+                    
+                    if not field:
+                        field = 'address'
+                    
+                    parsed_data[field] = line
+
+            for contact_key in parsed_data:
+                self.attrs[contact_key] = parsed_data[contact_key]
+
+    def extract_email(self):
+
+        self.__extract_contact_info()
+        return self.attrs['email']
+
+    def extract_phone(self):
+
+        self.__extract_contact_info()
+        return self.attrs['phone']
+
+    def extract_address(self):
+
+        self.__extract_contact_info()
+        return self.attrs['address']
+
+    def extract_categories(self):
+
+        if 'categories' not in self.attrs:
+
+            cat_section = self.find(class_=re.compile('styles_categoriesList'))
+            categories = None
+    
+            if cat_section:
+                cat_refs = cat_section.findAll(href=re.compile('/categories/'))
+                categories = [cat_tag.string for cat_tag in cat_refs]
+
+            self.attrs['categories'] = categories
+        
+        return self.attrs['categories']
+
+
+def extract_url(doc):
+    """
+    Extract the business URL
+
+    It never returns None, as a Trustpilot business always has a URL.
+    """
+    
+    return doc.extract_url()
+
+def extract_name(doc):
+    """
+    Extract the name from the business page.
+
+    It never return None, as a Trustpilot business always has a name.
+    """
+    
+    return doc.extract_name()
+
+def extract_nreviews(doc):
+    """
+    Extract the number of reviews about the company.
+    """
+    
+    return doc.extract_nreviews()
+
+def extract_score(doc):
+    """
+    Extract the score of the company.
+    """
+
+    return doc.extract_score()
+
+def extract_email(doc):
+    """
+    Extract the email. None is returned if it isn't published.
+    """
+    
+    return doc.extract_email()
+
+def extract_phone(doc):
+    """
+    Extract the phone number. None is returned if it isn't published.
+    """
+    
+    return doc.extract_email()
+
+def extract_address(doc):
+    """
+    Extract the address as a string. The found address fields are joined
+    with a comma.
+
+    The address may be partially completed, depending on the fields displyed
+    on the page. The city and country where the company is located are the
+    most common address fields, but neither they always appear.
+    """
+    
+    return doc.extract_address()
+
+def extract_categories(doc):
+    """
+    Extract the categories of a business. Info extracted from the
+    business page.
+    """
+
+    return doc.extract_categories()    
+
 def get_html_page(url):
-    return BeautifulSoup(request.urlopen(url), PARSER)
+    """
+    Fetch the page of the given url, which stands for a company page.
+    """
+    
+    return CompanyDoc(request.urlopen(url), PARSER)
 
 def extract_author_name(tag):
     """Extract the review author name"""
+    
     consumer_node = tag.find(
         attrs={"data-consumer-name-typography": "true"})
     return consumer_node.string.title()
@@ -252,10 +411,10 @@ def get_npages(tag):
     
     return npages    
 
-def find_review_nodes(url, nreviews):
+def find_review_nodes(company_url, nreviews):
     """Get the HTML nodes that cotains the reviews of a business"""
 
-    r = request.urlopen(url)
+    r = request.urlopen(company_url)
     parsed_page = BeautifulSoup(r, PARSER)
 
     max_npages = get_npages(parsed_page)
@@ -265,7 +424,7 @@ def find_review_nodes(url, nreviews):
 
         page_param = "" if current_page == 1 else f"&page={current_page}"
 
-        r = request.urlopen(f"{url}{page_param}")
+        r = request.urlopen(f"{company_url}{page_param}")
         parsed_page = BeautifulSoup(r, PARSER)
 
         nodes.extend(parsed_page.find_all(
