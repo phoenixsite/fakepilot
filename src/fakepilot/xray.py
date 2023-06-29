@@ -76,6 +76,8 @@ def find_companies_urls(tp_url, string_query, field_query, nbusiness):
 def extract_name_search(doc):
     """
     Extract the company name from a search page.
+
+    Used to discard companies that doesn't match the name query clause.
     """
     
     name_tag = doc.find('p', class_=re.compile('styles_displayName'))
@@ -84,6 +86,8 @@ def extract_name_search(doc):
 def extract_location_info_search(tag):
     """
     Extract the city and country location from the search page.
+
+    Used to discard companies that doesn't match the city query clause.
     """
 
     location_section = tag.find_all(class_=re.compile('styles_location'))
@@ -109,7 +113,10 @@ class CompanyDoc(BeautifulSoup):
     structure.
 
     Used to avoid double checkings when restrictions over the
-    attributes of a company are imposed.
+    attributes of a company are imposed. When an attribute is
+    extracted from the HTML page for the first time, then it is
+    saved in the object next extractions doesn't need to analyze
+    again the page.
     """
 
     def __init__(self, markup, parser):

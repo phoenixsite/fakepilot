@@ -1,5 +1,5 @@
 """
-site.py defines the main operations that enable
+site defines the main operations that enable
 the access to the scrapped data.
 """
 
@@ -61,17 +61,18 @@ class Company:
         self.url = extract_url(doc)
         self.name = extract_name(doc)
         self.nreviews, self.score = extract_nreviews(doc), extract_score(doc)
-
-        #loc_info = extract_location_info_search(tag)
-
-        #if loc_info:
-        #    self.city = loc_info['city']
-        #    self.country = loc_info['country']
-
         self.categories = extract_categories(doc)
         self.email = extract_email(doc)
         self.phone = extract_phone(doc)
         self.address = extract_address(doc)
+
+        if self.address:
+            address_els = self.address.split(',')
+
+            self.country = address_els[-1]
+
+            if len(address_els) > 1:
+                self.city = address_els[-2]
 
     def __str__(self):
         string = f"Name: {self.name}\nURL: {self.url}\n"
@@ -95,26 +96,25 @@ class Company:
 
         if self.phone:
             string += f"Phone number: {self.phone}\n"
-            
+
         if self.address:
             string += f"Address: {self.address}\n"
-        
+
         if self.reviews:
             string += "Reviews:\n"
 
             for count, review in enumerate(self.reviews):
                 string += f"Review {count}:\n{review}\n"
-                
+
         return string
 
-    def get_company_url(self):
+    def tp_url(self):
         return f"{self.site_url}/review/{self.url}"
 
     def extract_reviews(self, nreviews):
 
-        nodes = find_review_nodes(self.get_company_url(), nreviews)
+        nodes = find_review_nodes(self.tp_url(), nreviews)
         self.reviews = [Review(node) for node in nodes]
-                
 
 def has_attrs(doc, *attrs):
     """
@@ -126,9 +126,9 @@ def has_attrs(doc, *attrs):
     :type attrs: list of str
     :rparam True if all attrs is contained in doc, False otherwise.
     """
+    
     attrs = list(attrs)
     return reduce(lambda x, y: x and y, [attr in doc for attr in attrs], True)
-    
 
 def make_query(tp_url, query, ncompanies, *attrs):
     
@@ -167,7 +167,7 @@ def search(query, country="united states", ncompanies=None, *attrs):
     """
 
     if not query:
-        raise Exception("A query must be provided")
+        raise Exception("A query must be provided.")
     if not country:
         raise Exception(f"A valid country should be provided. The available countries are: {get_countries()}")
     
