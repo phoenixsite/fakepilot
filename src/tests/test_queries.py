@@ -63,6 +63,7 @@ class TestSearchQueries(unittest.TestCase):
         country = 'espana'
         query = 'city: almería, country: españa'
         cs = search(query, country, 7, "phone")
+        
         self.assertEqual(len(cs), 7)
         has_phone = reduce(lambda x, y: x and y, [c.phone for c in cs])
         self.assertTrue(has_phone)

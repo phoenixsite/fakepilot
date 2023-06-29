@@ -4,49 +4,71 @@ site. It checks different HTML and CSS elements to find where
 the data is displayed.
 """
 
+from functools import reduce
 import urllib.request as request
 from urllib.parse import urlparse, parse_qs
 from bs4 import BeautifulSoup
 import re
 from datetime import datetime
 
-from .utils import SEARCH_EXT
-
+SEARCH_EXT = "/search?"
+PARAM_QUERY = "query="
 PARSER = 'html.parser'
 
 
-def find_companies_urls(tp_url, string_query, field_query, nbusiness):
+def has_attrs(doc, *attrs):
+    """
+    Check if all the attributes attrs are in the company page doc.
+
+    :param doc: Extracted company page
+    :type doc: xray.CompanyDoc
+    :param attrs: Required attributes
+    :type attrs: list of str
+    :rparam True if all attrs is contained in doc, False otherwise.
+    """
+
+    attrs = list(attrs)
+    return reduce(lambda x, y: x and y, [attr in doc for attr in attrs], True)
+
+def find_companies(tp_url, string_query, field_query, nbusiness, *attrs):
     """
     Get the Trustpilot urls of the companies that match the requested
     query.
 
     :param tp_url: Trustpilot url
-    :type url: str
+    :type tp_url: str
     :param string_query: Prepared query string
     :type string_query: str
     :param field_query: Required values for each clause included in the
     query.
     :type field_query: dict of str, str
+    :param attrs: Required attributes in a company.
+    :type attrs: list of str
     :rparam: Trustpilot companies urls that match the query.
     :rtype: list of str
     """
 
-    r = request.urlopen(f"{tp_url}{SEARCH_EXT}{string_query}")
+    # Change to request binding method
+    r = request.urlopen(f"{tp_url}{SEARCH_EXT}{PARAM_QUERY}{string_query}")
     parsed_page = BeautifulSoup(r, PARSER)
 
     max_npages = get_npages(parsed_page)
-    current_page, urls = 1, []
+    current_page, docs = 1, []
     
-    while current_page <= max_npages and len(urls) < nbusiness:
+    while current_page <= max_npages and len(docs) < nbusiness:
 
-        page_param = "" if current_page == 1 else f"&page={current_page}"
+        page_param = "" if current_page == 1 else f"page={current_page}&"
+
+        hdr = { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101 Firefox/102.0' }
+        req = request.Request(
+            f"{tp_url}{SEARCH_EXT}{page_param}{PARAM_QUERY}{string_query}",
+            headers=hdr)
         
-        r = request.urlopen(
-            f"{tp_url}{SEARCH_EXT}{string_query}{page_param}")
-        search_page = BeautifulSoup(r, PARSER)
+        r = request.urlopen(req)
+        search_page = CompanyDoc(r, PARSER)
 
         current_nodes = search_page.find_all(
-            href=re.compile("/review/"), limit=(nbusiness - len(urls)))
+            href=re.compile("/review/"), limit=(nbusiness - len(docs)))
 
         if 'city' in field_query:
 
@@ -67,11 +89,16 @@ def find_companies_urls(tp_url, string_query, field_query, nbusiness):
                              field_query['name'],
                              extract_name_search(node),
                              re.IGNORECASE)]
+        
+        current_docs = [get_html_page(f"{tp_url}{node.get('href')}") for node in current_nodes]
+        
+        if attrs:
+            current_docs = [doc for doc in current_docs if has_attrs(doc, *attrs)]
 
-        urls.extend([f"{tp_url}{node.get('href')}" for node in current_nodes])
+        docs.extend(current_docs)
         current_page += 1
         
-    return urls
+    return docs
 
 def extract_name_search(doc):
     """
@@ -314,7 +341,7 @@ def extract_phone(doc):
     Extract the phone number. None is returned if it isn't published.
     """
     
-    return doc.extract_email()
+    return doc.extract_phone()
 
 def extract_address(doc):
     """

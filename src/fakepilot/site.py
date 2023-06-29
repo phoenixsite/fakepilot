@@ -26,9 +26,8 @@ from .xray import (
     extract_date,
     extract_rating,
     extract_content,
-    find_companies_urls,
-    find_review_nodes,
-    get_html_page
+    find_companies,
+    find_review_nodes
 )
 
 
@@ -116,29 +115,13 @@ class Company:
         nodes = find_review_nodes(self.tp_url(), nreviews)
         self.reviews = [Review(node) for node in nodes]
 
-def has_attrs(doc, *attrs):
-    """
-    Check if all the attributes attrs are in the company page doc.
-
-    :param doc: Extracted company page
-    :type doc: xray.CompanyDoc
-    :param attrs: Required attributes
-    :type attrs: list of str
-    :rparam True if all attrs is contained in doc, False otherwise.
-    """
-    
-    attrs = list(attrs)
-    return reduce(lambda x, y: x and y, [attr in doc for attr in attrs], True)
-
 def make_query(tp_url, query, ncompanies, *attrs):
     
     field_query = parse_query(query)
     string_query = prepare_tquery(field_query)
-    urls = find_companies_urls(tp_url, string_query,
-                              field_query, ncompanies)
+    docs = find_companies(tp_url, string_query,
+                              field_query, ncompanies, *attrs)
     
-    docs = [get_html_page(url) for url in urls]
-    docs = [doc for doc in docs if has_attrs(doc, *attrs)]
     companies = [Company(doc, tp_url) for doc in docs]
 
     return companies
@@ -150,6 +133,8 @@ def search(query, country="united states", ncompanies=None, *attrs):
     Required attributes in every extracted company can be specified, so
     a company that doesn't cotain any of these attributes will be
     discarded.
+
+    It only returns companies with some score.
 
     :param query: Query string. It should contain at least one word and
     query clauses can be specified (E.g. 'city: Los Angeles,
