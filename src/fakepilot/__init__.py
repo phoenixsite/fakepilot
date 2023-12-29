@@ -1,3 +1,0 @@
-from .site import (
-    search
-    )
