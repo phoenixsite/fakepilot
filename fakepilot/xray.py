@@ -123,15 +123,14 @@ class CompanyDoc(BeautifulSoup):
         if 'score' not in self.attrs or 'nreviews' not in self.attrs:
             nreviews_tag = self.find(
                 attrs={'data-reviews-count-typography': 'true'})
-    
+
             if nreviews_tag.string:
                 nreviews = nreviews_tag.string.split()[0]
             else:
                 nreviews = next(nreviews_tag.strings)
 
-            nreviews = nreviews.replace(',', "").replace(".", "")
-            nreviews = int(nreviews)
-    
+            # The thousand separator is different for some countries
+            nreviews = int(re.sub(r'[.,\xa0]', '', nreviews))
             score_tag = self.find(attrs={'data-rating-typography': 'true'})
             score = float(score_tag.string.replace(",", "."))
             self.attrs['nreviews'] = nreviews
