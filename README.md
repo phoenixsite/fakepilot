@@ -1,6 +1,6 @@
 # Fakepilot
-Trustpilot scrapping Python package. Extract online business reviews and
-integrate it on your code.
+[Trustpilot](https://www.trustpilot.com/) scrapping Python package.
+Extract online business reviews and integrate it on your code.
 It is based on [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/).
 
 ## Setup
@@ -15,7 +15,7 @@ git clone https://github.com/phoenixsite/fakepilot.git
 
 ``` sh
 cd fakepilot
-pip install fakepilot
+pip install .
 ```
 
 ## Usage

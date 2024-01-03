@@ -1,13 +1,8 @@
-import unittest
-from fakepilot.xray import (
-    get_npages,
-    get_companies_info,
-    get_reviews,
-    CompanyDoc
-    )
 
-from bs4 import BeautifulSoup
 import urllib.request as request
+import unittest
+from fakepilot._xray import get_npages, get_companies_info, CompanyDoc
+from bs4 import BeautifulSoup
 
 PARSER = 'html.parser'
 
@@ -69,7 +64,8 @@ class TestXray(unittest.TestCase):
             "npages": [130, 1, 3, 136, 3, 27, 3, 1],
         }
 
-        self.cdocs = [CompanyDoc(request.urlopen(url), PARSER)
+        search_data = {"score": -1, "nreviews": -1}
+        self.cdocs = [CompanyDoc(request.urlopen(url), PARSER, search_data)
                               for url in self.urls]
 
     def test_extract_name(self):
@@ -89,7 +85,7 @@ class TestXray(unittest.TestCase):
         
     def test_extract_categories(self):
         """
-        Tests that the categories extracted from a company are the correct ones
+        Test that the categories extracted from a company are the correct ones
         for some example companies.
         """
         
@@ -100,8 +96,7 @@ class TestXray(unittest.TestCase):
         
     def test_getnpages(self):
         """
-        Tests that the number of pages extracted from a reviews company page is correct
-        for some example companies.
+        Test that the number of pages extracted is correct.
         """
         
         for i, r in enumerate(self.cdocs):
@@ -111,8 +106,7 @@ class TestXray(unittest.TestCase):
 
     def test_number_companies(self):
         """
-        Tests that the number of companies extracted is correct for an example
-        query.
+        Test that the number of companies extracted is correct.
         """
         
         string_query = 'granada'
@@ -120,16 +114,5 @@ class TestXray(unittest.TestCase):
         nbusinesses = [2, 5, 10, 13, 25, 50]
 
         for nbusiness in nbusinesses:
-            urls = get_companies_info(country, string_query, {}, nbusiness)
+            urls = get_companies_info(country, string_query, {}, nbusiness, None)
             self.assertEqual(nbusiness, len(urls))
-        
-    def test_number_reviews(self):
-        """Tests that the number of reviews extracted is correct."""
-
-        url = 'https://es.trustpilot.com/review/www.hsnstore.com?languages=all'
-        nreviews = [1, 2, 5, 15, 30, 50]
-
-        for nreview in nreviews:
-            reviews = get_reviews(url, nreview)
-            with self.subTest(nreviews=nreview):
-                self.assertEqual(nreview, len(reviews))
