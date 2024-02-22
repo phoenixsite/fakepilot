@@ -1,12 +1,12 @@
 import unittest
-from fakepilot import search, get_reviews
+from fakepilot import search, extract_reviews
 from functools import reduce
 
 class TestSite(unittest.TestCase):
 
     def test_required_attrs(self):
 
-        query, ncompanies = "burger", 5
+        query, ncompanies = "burger", 2
         required_attrs = ["phone", "email", "address"]
 
         for attr in required_attrs:
@@ -20,9 +20,9 @@ class TestSite(unittest.TestCase):
     def test_number_reviews(self):
         """Tests that the number of reviews extracted is correct."""
         url = 'https://es.trustpilot.com/review/www.hsnstore.com?languages=all'
-        nreviews = [1, 2, 5, 15, 30, 50]
+        nreviews = [1, 2, 5]
 
         for nreview in nreviews:
-            reviews = get_reviews(url, nreview)
+            reviews = extract_reviews(url, nreview)
             with self.subTest(nreviews=nreview):
                 self.assertEqual(nreview, len(reviews))

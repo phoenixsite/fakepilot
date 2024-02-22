@@ -8,8 +8,9 @@ from urllib import request
 from urllib.parse import parse_qs, urlparse
 import re
 from datetime import datetime
+import os
 from bs4 import BeautifulSoup, SoupStrainer
-from .utils import get_tp_company_url, get_tp_search_url
+from .utils import get_tp_company_url, get_search_url, get_company_url_paged
 
 PARSER = 'lxml'
 
@@ -23,7 +24,7 @@ def has_attrs(tag, attrs):
     :param tag: HTML tag that should contain SVG icons. 
     :type tag: :ref:`bs4:Tag`
     :param attrs: Required attributes that the company must include.
-    :type attrs: list[str]
+    :type attrs: list[str] or str
     :return: ``True`` if all `attrs` are contained in `tag`, ``False`` otherwise.
     """
 
@@ -69,37 +70,6 @@ def has_attrs(tag, attrs):
             include_all = False
 
     return include_all
-
-def extract_name_search(tag):
-    """
-    Extract the company name from a search page entry.
-
-    It is used to discard companies that doesn't match the name query clause.
-    """
-
-    name_tag = tag.find('p', class_=re.compile('styles_displayName'))
-    return name_tag.string
-
-def extract_location_info_search(tag):
-    """
-    Extract the city and country location from the search page.
-    """
-
-    location_section = tag.find_all(class_=re.compile('styles_location'))
-    loc_info = None
-
-    # Check if location business info is shown
-    if location_section:
-        loc_info = {}
-        location_section = location_section[0]
-
-        # Contain HTML comments in the middle of the string
-        # so this must be deleted
-        location = list(location_section.strings)
-        loc_info['city'] = location[0].capitalize()
-        loc_info['country'] = location[-1].capitalize()
-
-    return loc_info
 
 def extract_nreviews_score_search(tag):
     """
@@ -377,7 +347,34 @@ def get_npages(tag):
 
     return npages
 
-def get_companies_info(country, string_query, field_query, nbusiness, required_attrs):
+def get_company_info(result_tag, country, required_attrs):
+    """Extract the company's data."""
+    company_url = result_tag.find(href=re.compile("/review/")).get('href')
+
+    # The number of reviews and TrustScore is passed to CompanyDoc
+    # in case the company's website has closed, so the tag in the
+    # company page where those attributes were supposed to be
+    # are not shown.
+    # Example: https://www.trustpilot.com/review/rumbles.dk
+    search_data = extract_nreviews_score_search(result_tag)
+    tp_comp_url = get_tp_company_url(country, company_url)
+
+    with request.urlopen(tp_comp_url) as r:
+        comp_page = CompanyDoc(r, PARSER, search_data)
+
+    return {
+        "name": comp_page.extract_name(),
+        "url": comp_page.extract_url(),
+        "nreviews": comp_page.extract_nreviews(),
+        "score": comp_page.extract_score(),
+        "categories": comp_page.extract_categories(),
+        "email": comp_page.extract_email(),
+        "phone": comp_page.extract_phone(),
+        "address": comp_page.extract_address(),
+        "tp_url": tp_comp_url
+    }
+
+def get_companies_info(country, query, nbusiness, required_attrs):
     """
     Get the Trustpilot data of the companies that match a query.
 
@@ -386,109 +383,69 @@ def get_companies_info(country, string_query, field_query, nbusiness, required_a
 
     :param country: Country whose Trustpilot page is used to scrape. 
     :type country: str
-    :param string_query: Prepared query string.
-    :type string_query: str
-    :param field_query: Required values for each clause included in the
-           query.
-    :type field_query: dict[str,str]
-    :param attrs: Required attributes in a company. If a company does not
-           include some of the ones in attr, it is discarded. 
-    :type attrs: list[str]
+    :param query: Prepared query string.
+    :type query: str
+    :param required_attrs: Required attributes found in a company.
+           If a company does not include any of the ones in
+           required_attrs, it is discarded. 
+    :type required_attrs: list[str]
     :return: Trustpilot companies that match the query.
     :rtype: list[dict(str,)]
     """
 
-    url = get_tp_search_url(country, string_query)
-    with request.urlopen(url) as r:
+    companies = []
+    search_class = re.compile('businessUnitResult')
+    only_results = SoupStrainer(class_=search_class)
+    url = get_search_url(country, query)
+
+    # Artificial header. TODO: Random generation of headers and
+    # inter-request time.
+    hdr = { 'User-Agent':
+            """Mozilla/5.0 (Windows NT 10.0; Win64; x64;
+            rv:102.0) Gecko/20100101 Firefox/102.0"""
+    }
+    req = request.Request(url, headers=hdr)
+    with request.urlopen(req) as r:
         parsed_page = BeautifulSoup(
             r,
             PARSER,
             from_encoding=TPENCODING
         )
     max_npages = get_npages(parsed_page)
-    current_page, companies = 1, []
-    search_class = re.compile('businessUnitResult')
-    only_results = SoupStrainer(class_=search_class)
+    result_tags = parsed_page.find_all(
+        class_=search_class,
+        limit=nbusiness
+    )
+
+    if required_attrs:
+        result_tags = [tag for tag in result_tags
+                        if has_attrs(tag, required_attrs)]
+        
+    companies = [get_company_info(tag, country, required_attrs) for tag in result_tags]
+    current_page = 2
 
     while current_page <= max_npages and len(companies) < nbusiness:
 
-        # Artificial header. TODO: Random generation of headers and
-        # inter-request time.
-        hdr = { 'User-Agent':
-                """Mozilla/5.0 (Windows NT 10.0; Win64; x64;
-                rv:102.0) Gecko/20100101 Firefox/102.0"""
-        }
-        url = get_tp_search_url(country, string_query, current_page)
-        req = request.Request(url, headers=hdr)
-
+        url = get_search_url(country, query, current_page)
+        req.full_url = url
         with request.urlopen(req) as r:
             search_page = BeautifulSoup(
-                r,
-                PARSER,
+                r, PARSER,
                 from_encoding=TPENCODING,
                 parse_only=only_results,
             )
 
-        result_nodes = search_page.find_all(
+        result_tags = search_page.find_all(
             class_=search_class,
             limit=(nbusiness - len(companies))
         )
 
-        # Checking for the query clauses
-        if 'city' in field_query:
+        if required_attrs:
+            result_tags = [tag for tag in result_tags
+                            if has_attrs(tag, required_attrs)]
 
-            result_nodes = [node for node in result_nodes
-                     if extract_location_info_search(node)
-                     and re.search(
-                         field_query['city'],
-                         extract_location_info_search(node)['city'],
-                         re.IGNORECASE)
-                     and re.search(
-                         field_query['country'],
-                         extract_location_info_search(node)['country'],
-                         re.IGNORECASE)]
-
-        if 'name' in field_query:
-            result_nodes = [node for node in result_nodes
-                     if re.search(
-                             field_query['name'],
-                             extract_name_search(node),
-                             re.IGNORECASE)]
-
-        for result_node in result_nodes:
-
-            if (not required_attrs
-                or (required_attrs and has_attrs(result_node, required_attrs))
-            ):
-                node = result_node.find(href=re.compile("/review/"))
-
-                # The number of reviews and TrusScore is passed to CompanyDoc
-                # in case the company's website has closed, so the tag in the
-                # company page where those attributes were supposed to be
-                # are not shown.
-                # Example: https://www.trustpilot.com/review/rumbles.dk
-                search_data = extract_nreviews_score_search(result_node)
-                tp_comp_url = get_tp_company_url(country, node.get('href'))
-
-                with request.urlopen(tp_comp_url) as r:
-                    comp_page = CompanyDoc(
-                        r,
-                        PARSER,
-                        search_data
-                    )
-
-                companies.append({
-                    "name": comp_page.extract_name(),
-                    "url": comp_page.extract_url(),
-                    "nreviews": comp_page.extract_nreviews(),
-                    "score": comp_page.extract_score(),
-                    "categories": comp_page.extract_categories(),
-                    "email": comp_page.extract_email(),
-                    "phone": comp_page.extract_phone(),
-                    "address": comp_page.extract_address(),
-                    "tp_url": tp_comp_url
-                })
-
+        companies.extend([get_company_info(tag, country, required_attrs)
+                         for tag in result_tags])
         current_page += 1
 
     return companies
@@ -571,7 +528,17 @@ def extract_content(tag):
 
     return content
 
-def extract_reviews(markup, nreviews, is_local, company_url):
+def get_review_info(tag):
+    """Extract the review's data"""
+    return {
+        "author_name": extract_author_name(tag),
+        "author_id": extract_author_id(tag),
+        "star_rating": extract_rating(tag),
+        "date": extract_date(tag),
+        "content": extract_content(tag),
+    }
+
+def extract_reviews(source, nreviews):
     """
     Extract the reviews' data included in a company's Trustpilot page.
 
@@ -581,30 +548,40 @@ def extract_reviews(markup, nreviews, is_local, company_url):
     If the source is from a static saved HTML page, then just one page is
     analyzed.
 
-    :param markup: HTML source that contains the company's reviews.
-    :type markup: http.client.HTTPResponse or str
+    :param source: URL or path to file from where the data is extracted. If
+           it is an URL, then it must be the company's URL on Trustpilot,
+           which should be like `` https://www.trustpilot.com/review/example-comp``.
+    :type source: str or path-like object
     :param nreviews: Number of reviews to be extracted.
     :type nreviews: int
-    :param is_local: Indicates if markup has been obtained via a request
-           or with a file.
-    :type is_local: bool
-    :param url: URL of the company whose reviews are extracted. Ignored if
-           `is_local` is ``True``.
     :return: List of each review's data.
     :rtype: list[dict(str,]
     """
 
-    parsed_page = BeautifulSoup(markup, PARSER, from_encoding=TPENCODING)
-    max_npages = get_npages(parsed_page) if not is_local else 1
-    current_page, reviews = 1, []
     search_class = re.compile("styles_reviewCardInner")
     only_reviews = SoupStrainer(class_=search_class)
+
+    if os.path.isfile(source):
+        is_local = True
+        with open(source) as f:
+            parsed_page = BeautifulSoup(f, PARSER, from_encoding=TPENCODING)
+    else:
+        is_local = False
+        with request.urlopen(source) as r:
+            parsed_page = BeautifulSoup(r, PARSER, from_encoding=TPENCODING)
+        
+    max_npages = get_npages(parsed_page) if not is_local else 1
+    review_tags = parsed_page.find_all(
+        class_=search_class,
+        limit=nreviews
+    )
+    reviews = [get_review_info(tag) for tag in review_tags]
+    current_page = 2
 
     while current_page <= max_npages and len(reviews) < nreviews:
 
         if not is_local:
-            page_param = "" if current_page == 1 else f"&page={current_page}"
-            with request.urlopen(f"{company_url}{page_param}") as r:
+            with request.urlopen(get_company_url_paged(source, current_page)) as r:
                 parsed_page = BeautifulSoup(
                     r,
                     PARSER,
@@ -612,20 +589,11 @@ def extract_reviews(markup, nreviews, is_local, company_url):
                     parse_only=only_reviews
                 )
 
-        nodes = parsed_page.find_all(
+        review_tags = parsed_page.find_all(
             class_=search_class,
             limit=nreviews - len(reviews)
         )
-
-        for node in nodes:
-            reviews.append({
-                "author_name": extract_author_name(node),
-                "author_id": extract_author_id(node),
-                "star_rating": extract_rating(node),
-                "date": extract_date(node),
-                "content": extract_content(node),
-            })
-
+        reviews.extend([get_review_info(tag) for tag in review_tags])
         current_page += 1
 
     return reviews

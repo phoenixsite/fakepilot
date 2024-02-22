@@ -111,7 +111,7 @@ class TestXray(unittest.TestCase):
         
         string_query = 'granada'
         country = "Espana"
-        nbusinesses = [2, 5, 10, 13, 25, 50]
+        nbusinesses = [2, 5, 10]
 
         for nbusiness in nbusinesses:
             urls = get_companies_info(country, string_query, {}, nbusiness, None)

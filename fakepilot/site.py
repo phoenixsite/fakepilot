@@ -2,10 +2,7 @@
 Defines the main operations that enable the access to the scrapped data.
 """
 
-import os
 from urllib import request
-from .utils import COUNTRIES
-from .query import prepare_tquery, parse_query
 from ._xray import get_companies_info, extract_reviews
 
 def search(query, ncompanies=10, country="united states",
@@ -78,14 +75,14 @@ def search(query, ncompanies=10, country="united states",
              Sometimes also the city,
              and eventually an unstructured list of address records, such as
              housenumber, street or postal code. For the extracted data of a
-             review, see :func:`get_reviews`.
+             review, see :func:`extract_reviews`.
     :rtype: list[dict(str, )]
     :raise ValueError: if query is empty or country is not between those
            available.
 
     See also
     --------
-    :func:`get_reviews`
+    :func:`extract_reviews`
 
     Examples
     --------
@@ -127,49 +124,12 @@ def search(query, ncompanies=10, country="united states",
     """
 
     if not query:
-        raise ValueError("A query must be provided.")
-    if not country:
+        raise ValueError("Query not provided. There must be at least a character.")
 
-        all_countries = [country.title() for country in COUNTRIES.keys()]
-        s = ", ".join(all_countries[:len(all_countries) - 1])
-        s = f"{s} and {all_countries[-1]}"
-        raise ValueError("""A valid country should be provided. The"""
-                         f"available countries are: {s}")
-
-    field_query = parse_query(query)
-    string_query = prepare_tquery(field_query)
-    companies = get_companies_info(country, string_query,
-                                 field_query, ncompanies, required_attrs)
+    companies = get_companies_info(country, query,
+                                   ncompanies, required_attrs)
 
     if with_reviews:
-        for company in companies:
-            company["reviews"] = get_reviews(company["tp_url"], nreviews)
-
+        companies = [company | {"reviews": extract_reviews(company["tp_url"], nreviews)}
+                     for company in companies]
     return companies
-
-
-def get_reviews(source, nreviews):
-    """
-    Get the reviews given by `source`.
-
-    :param source: URL or path to file from where the data is extracted.
-    :type source: str or path-like object
-    :param nreviews: Number of reviews to be extracted.
-    :type nreviews: int
-    :return: List of each reviews' data.
-    :rtype: list[dict(str,)]
-    """
-
-    is_local, url = True, None
-
-    if os.path.isfile(source):
-        with open(source, encoding="utf-8") as f:
-            html_tag = f.read()
-    else:
-        with request.urlopen(source) as r:
-            html_tag = r.read()
-
-        is_local = False
-        url = source
-
-    return extract_reviews(html_tag, nreviews, is_local, url)
