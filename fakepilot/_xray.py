@@ -389,7 +389,7 @@ def get_companies_info(country, query, nbusiness, required_attrs):
     :param required_attrs: Required attributes found in a company.
            If a company does not include any of the ones in
            required_attrs, it is discarded. 
-    :type required_attrs: list[str]
+    :type required_attrs: list[str] or str or None
     :return: Trustpilot companies that match the query.
     :rtype: list[dict(str,)]
     """

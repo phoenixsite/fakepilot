@@ -38,19 +38,17 @@ fp.search("starbucks", 1, "norge")
 ```
 
 If it is required that all the results include a specific parameter, e.g.
-the phone number or the email address of the company, you can specify
+the phone number of the company, you can specify
 in the `search` function:
 
 ```python
 fp.search("starbucks", 1, "norge",
-		       with_reviews=False, nreviews=1, "phone")
+		       with_reviews=False, nreviews=1, required_attrs="phone")
 ```
 
-It is required to specify the rest of the parameters to use this. This issue
-will be fixed on following commits (It does not work at this moment).
-
 Also, the reviews of a Trustpilot company page can be directly extracted
-using `get_reviews`. The following block extracts ten reviews from the
+using `extract_reviews``from a given URL or a local file.
+The following block extracts ten reviews from the
 specified page:
 
 ```python
