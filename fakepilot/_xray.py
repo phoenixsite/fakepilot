@@ -10,7 +10,7 @@ import re
 from datetime import datetime
 import os
 from bs4 import BeautifulSoup, SoupStrainer
-from .utils import get_tp_company_url, get_search_url, get_company_url_paged
+import fakepilot.utils as utils
 
 PARSER = 'lxml'
 
@@ -97,12 +97,13 @@ class CompanyDoc(BeautifulSoup):
     included in the same tag, so when one of them is extracted
     the other is got as well.  When an attribute is
     extracted for the first time, then it is
-    saved in the object so following extractions doesn't need to analyze
-    the page again.
+    saved in the object so following extractions doesn't need to get into
+    the HTML tree again.
 
     :param markup: HTML page that contains the information of a business.
     :type markup: http.client.HTTPResponse or str
-    :param parser: BeautifulSoup parser. See :ref:`bs4:parser-installation`.
+    :param parser: BeautifulSoup parser. The lmxml parser is used.
+                   See :ref:`bs4:parser-installation`.
     :type parser: str
     :param search_data: Company data extracted from the search page. 
     :type search_data: dict(str,)
@@ -348,7 +349,7 @@ def get_npages(tag):
     return npages
 
 def get_company_info(result_tag, country, required_attrs):
-    """Extract the company's data."""
+    """Extract the data of a company."""
     company_url = result_tag.find(href=re.compile("/review/")).get('href')
 
     # The number of reviews and TrustScore is passed to CompanyDoc
@@ -357,7 +358,7 @@ def get_company_info(result_tag, country, required_attrs):
     # are not shown.
     # Example: https://www.trustpilot.com/review/rumbles.dk
     search_data = extract_nreviews_score_search(result_tag)
-    tp_comp_url = get_tp_company_url(country, company_url)
+    tp_comp_url = utils.get_tp_company_url(country, company_url)
 
     with request.urlopen(tp_comp_url) as r:
         comp_page = CompanyDoc(r, PARSER, search_data)
@@ -383,7 +384,7 @@ def get_companies_info(country, query, nbusiness, required_attrs):
 
     :param country: Country whose Trustpilot page is used to scrape. 
     :type country: str
-    :param query: Prepared query string.
+    :param query: Query string.
     :type query: str
     :param required_attrs: Required attributes found in a company.
            If a company does not include any of the ones in
@@ -396,7 +397,7 @@ def get_companies_info(country, query, nbusiness, required_attrs):
     companies = []
     search_class = re.compile('businessUnitResult')
     only_results = SoupStrainer(class_=search_class)
-    url = get_search_url(country, query)
+    url = utils.get_search_url(country, query)
 
     # Artificial header. TODO: Random generation of headers and
     # inter-request time.
@@ -426,7 +427,7 @@ def get_companies_info(country, query, nbusiness, required_attrs):
 
     while current_page <= max_npages and len(companies) < nbusiness:
 
-        url = get_search_url(country, query, current_page)
+        url = utils.get_search_url(country, query, current_page)
         req.full_url = url
         with request.urlopen(req) as r:
             search_page = BeautifulSoup(
@@ -464,7 +465,7 @@ def extract_author_name(tag):
     return consumer_node.string.title()
 
 def extract_author_id(tag):
-    """Extract the review author id."""
+    """Extract the review's author id."""
     consumer_node = tag.find(
         attrs={"data-consumer-profile-link": "true"})
 
@@ -477,7 +478,7 @@ def extract_author_id(tag):
     return consumer_node.get('href').removeprefix('/users/')
 
 def extract_rating(tag):
-    """Extract the rating given in the review."""
+    """Extract the rating in the review."""
     star_rating_node = tag.find(class_=re.compile('star-rating'))
 
     if not star_rating_node:
@@ -489,7 +490,7 @@ def extract_rating(tag):
     return float(re.search(r'[0-5]', star_rating_node.img['alt']).group())
 
 def extract_date(tag):
-    """Extract the date the review was written."""
+    """Extract the date the review was posted."""
     date_node = tag.find(
         attrs={"data-service-review-date-time-ago": "true"})
 
@@ -581,7 +582,7 @@ def extract_reviews(source, nreviews):
     while current_page <= max_npages and len(reviews) < nreviews:
 
         if not is_local:
-            with request.urlopen(get_company_url_paged(source, current_page)) as r:
+            with request.urlopen(utils.get_company_url_paged(source, current_page)) as r:
                 parsed_page = BeautifulSoup(
                     r,
                     PARSER,

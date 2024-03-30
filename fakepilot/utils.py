@@ -41,6 +41,7 @@ def normalize(country):
 def check_country(country):
     """Check if a country code is between those available in Trustpilot."""
     country_code = COUNTRIES[normalize(country)]
+    
     if not country_code:
         raise ValueError("""The selected country is not available in
         Trustpilot""")
