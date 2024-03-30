@@ -55,6 +55,11 @@ specified page:
 get_reviews("https://www.trustpilot.com/review/www.starbucks.com", 10)
 ```
 
+## Documentation
+For a detail description of all the options, you can build yourself the documentation
+in ``docs`` with [Sphinx](https://www.sphinx-doc.org/en/master/) or visit the
+[faekpilot documentation page](https://fakepilot.readthedocs.io).
+
 ## Warning
 I strongly recomment using this scrapper with moderation and carefully.
 Searching for multiple expressions in a short period of time can generate
