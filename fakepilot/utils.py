@@ -72,9 +72,11 @@ def pretty_countries():
     s = f"{s} and {all_countries[-1]}"
     return s
 
+
 def normalize(country):
     """Normalize the input country."""
     return country.casefold()
+
 
 def check_country(country):
     """Check if a country code is between those available in Trustpilot."""
@@ -82,6 +84,7 @@ def check_country(country):
 
     if not country_code:
         raise ValueError("The selected country is not available in Trustpilot")
+
 
 def get_country_address(country):
     """
@@ -95,21 +98,24 @@ def get_country_address(country):
     country_code = COUNTRIES[normalize(country)]
     return f"www.{BASE_URL}" if country_code == "us" else f"{country_code}.{BASE_URL}"
 
+
 def get_search_url(country, string_query, npage=1):
     """Return the URL of the Trustpilot's search page."""
     full_address = get_country_address(country)
-    
+
     query_values = {PAGE_PARAM: npage} if npage != 1 else {}
     query_values[QUERY_PARAM] = string_query
-    
+
     url = f"{HTTP_PROT}://{full_address}/{SEARCH_PAGE}"
     data = urlencode(query_values)
     return f"{url}?{data}"
+
 
 def get_tp_company_url(country, company_url):
     """Return the full Trustpilot company's URL for a specific country."""
     full_address = get_country_address(country)
     return f"{HTTP_PROT}://{full_address}{company_url}?languages=all"
+
 
 def get_company_url_paged(tp_company_url, npage=1):
     """

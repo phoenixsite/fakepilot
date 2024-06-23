@@ -16,6 +16,9 @@ from bs4 import BeautifulSoup, SoupStrainer
 from . import utils
 
 PARSER = "lxml"
+REVIEW_CLASS = re.compile("styles_reviewCardInner")
+BUSINESS_CLASS = re.compile("businessUnitResult")
+
 
 # Used to speed up the BeautifulSoup detection of the markup encoding
 TPENCODING = "utf-8"
@@ -120,6 +123,9 @@ class CompanyDoc(BeautifulSoup):
 
         self._nreviews = nreviews
         self._score = score
+        self._email = None
+        self._address = None
+        self._phone = None
 
     @cached_property
     def url(self):
@@ -152,7 +158,11 @@ class CompanyDoc(BeautifulSoup):
         nreviews_tag = self.find(attrs={"data-reviews-count-typography": "true"})
 
         if nreviews_tag:
-            nreviews = nreviews_tag.string.split()[0] if nreviews_tag.string else next(nreviews_tag.strings)
+            nreviews = (
+                nreviews_tag.string.split()[0]
+                if nreviews_tag.string
+                else next(nreviews_tag.strings)
+            )
 
             # The thousand separator is different for some countries
             nreviews = re.sub(r"[.,\xa0]", "", nreviews)
@@ -300,7 +310,7 @@ def get_npages(tag):
     return npages
 
 
-def get_company_info(result_tag, country, required_attrs):
+def get_company_info(result_tag, country):
     """Extract the data of a company."""
     company_url = result_tag.find(href=re.compile("/review/")).get("href")
 
@@ -312,17 +322,17 @@ def get_company_info(result_tag, country, required_attrs):
     score, nreviews = extract_nreviews_score_search(result_tag)
     tp_comp_url = utils.get_tp_company_url(country, company_url)
 
-    try: 
+    try:
         with request.urlopen(tp_comp_url) as r:
             comp_page = CompanyDoc(r, PARSER, score, nreviews)
     except HTTPError as e:
         if e.code == 403:
             raise RuntimeError(
                 "Forbidden access to Trustpilot. You've made too much"
-                "requests to Trustpilot."
-            )
-        else:
-            raise e
+                "requests tom o Trustpilot."
+            ) from e
+
+        raise e
 
     return {
         "name": comp_page.company_name,
@@ -335,6 +345,45 @@ def get_company_info(result_tag, country, required_attrs):
         "address": comp_page.address,
         "tp_url": tp_comp_url,
     }
+
+
+def tp_open_url(req):
+    """
+    Open a Trustpilot URL and manages the response from the site.
+
+    It checks if the response from Trustpilot indicates that the
+    access is forbidden.
+
+    :param req: Request that will be sent.
+    :type req: request.Request
+    :return: Parsed page.
+    :rtype: :ref:`bs4:BeautifulSoup`
+    """
+
+    try:
+        with request.urlopen(req) as r:
+            parsed_page = BeautifulSoup(r, PARSER, from_encoding=TPENCODING)
+    except HTTPError as e:
+        if e.code == 403:
+            raise RuntimeError(
+                "Forbidden access to Trustpilot. You've made too many "
+                "requests. No results have been fetched."
+            ) from e
+
+        raise e
+
+    return parsed_page
+
+
+def construct_request(url):
+    """Construct a request for the given url."""
+    # Artificial header. TODO: Random generation of headers and
+    # inter-request time.
+    hdr = {
+        "User-Agent": """Mozilla/5.0 (Windows NT 10.0; Win64; x64;
+            rv:102.0) Gecko/20100101 Firefox/102.0"""
+    }
+    return request.Request(url, headers=hdr)
 
 
 def get_companies_info(country, query, nbusiness, required_attrs):
@@ -356,37 +405,17 @@ def get_companies_info(country, query, nbusiness, required_attrs):
     :rtype: list[dict(str,)]
     """
 
-    search_class = re.compile("businessUnitResult")
-    only_results = SoupStrainer(class_=search_class)
-    url = utils.get_search_url(country, query)
+    only_results = SoupStrainer(class_=BUSINESS_CLASS)
+    req = construct_request(utils.get_search_url(country, query))
 
-    # Artificial header. TODO: Random generation of headers and
-    # inter-request time.
-    hdr = {
-        "User-Agent": """Mozilla/5.0 (Windows NT 10.0; Win64; x64;
-            rv:102.0) Gecko/20100101 Firefox/102.0"""
-    }
-    req = request.Request(url, headers=hdr)
-
-    try:
-        with request.urlopen(req) as r:
-            parsed_page = BeautifulSoup(r, PARSER, from_encoding=TPENCODING)
-    except HTTPError as e:
-        if e.code == 403:
-            raise RuntimeError(
-                "Forbidden access to Trustpilot. You've made too much "
-                "requests. No companies have been fetched."
-            )
-        else:
-            raise e
-    
+    parsed_page = tp_open_url(req)
     max_npages = get_npages(parsed_page)
-    result_tags = parsed_page.find_all(class_=search_class, limit=nbusiness)
+    result_tags = parsed_page.find_all(class_=BUSINESS_CLASS, limit=nbusiness)
 
     if required_attrs:
         result_tags = [tag for tag in result_tags if has_attrs(tag, required_attrs)]
 
-    companies = [get_company_info(tag, country, required_attrs) for tag in result_tags]
+    companies = [get_company_info(tag, country) for tag in result_tags]
     current_page = 2
 
     while current_page <= max_npages and len(companies) < nbusiness:
@@ -404,16 +433,16 @@ def get_companies_info(country, query, nbusiness, required_attrs):
         except HTTPError as e:
             if e.code == 403:
                 warnings.warn(
-                    "Forbidden access to Trustpilot. You've made too much "
+                    "Forbidden access to Trustpilot. You've made too many "
                     "requests. Returning the fecthed companies.",
-                    RuntimeWarning
+                    RuntimeWarning,
                 )
                 break
-            else:
-                raise e
+
+            raise e
 
         result_tags = search_page.find_all(
-            class_=search_class, limit=(nbusiness - len(companies))
+            class_=BUSINESS_CLASS, limit=(nbusiness - len(companies))
         )
 
         if required_attrs:
@@ -421,17 +450,17 @@ def get_companies_info(country, query, nbusiness, required_attrs):
 
         try:
             for tag in result_tags:
-                companies.append(get_company_info(tag, country, required_attrs))
+                companies.append(get_company_info(tag, country))
         except HTTPError as e:
             if e.code == 403:
                 warnings.warn(
-                    "Forbidden access to Trustpilot. You've made too much "
+                    "Forbidden access to Trustpilot. You've made too many "
                     "requests to Trustpilot. Returning the fecthed companies.",
-                    RuntimeWarning
+                    RuntimeWarning,
                 )
                 break
-            else:
-                raise e
+
+            raise e
 
         current_page += 1
 
@@ -547,8 +576,7 @@ def extract_reviews(source, nreviews):
     :rtype: list[dict(str,]
     """
 
-    search_class = re.compile("styles_reviewCardInner")
-    only_reviews = SoupStrainer(class_=search_class)
+    only_reviews = SoupStrainer(class_=REVIEW_CLASS)
 
     if os.path.isfile(source):
         is_local = True
@@ -556,44 +584,35 @@ def extract_reviews(source, nreviews):
             parsed_page = BeautifulSoup(f, PARSER, from_encoding=TPENCODING)
     else:
         is_local = False
-
-        try:
-            with request.urlopen(source) as r:
-                parsed_page = BeautifulSoup(r, PARSER, from_encoding=TPENCODING)
-        except HTTPError as e:
-            if e.code == 403:
-                raise RuntimeError(
-                    "Forbidden access to Trustpilot. You've made too much "
-                    "requests. No reviews  have been fecthed."
-                )
-            else:
-                raise e
+        parsed_page = tp_open_url(source)
 
     max_npages = get_npages(parsed_page) if not is_local else 1
-    review_tags = parsed_page.find_all(class_=search_class, limit=nreviews)
+    review_tags = parsed_page.find_all(class_=REVIEW_CLASS, limit=nreviews)
     reviews = [get_review_info(tag) for tag in review_tags]
     current_page = 2
 
     while current_page <= max_npages and len(reviews) < nreviews:
 
         try:
-            with request.urlopen(utils.get_company_url_paged(source, current_page)) as r:
+            with request.urlopen(
+                utils.get_company_url_paged(source, current_page)
+            ) as r:
                 parsed_page = BeautifulSoup(
                     r, PARSER, from_encoding=TPENCODING, parse_only=only_reviews
                 )
         except HTTPError as e:
             if e.code == 403:
                 warnings.warn(
-                    "Forbidden access to Trustpilot. You've made too much "
+                    "Forbidden access to Trustpilot. You've made too many "
                     "requests. Returning the fecthed the reviews.",
-                    RuntimeWarning
+                    RuntimeWarning,
                 )
                 break
-            else:
-                raise e
+
+            raise e
 
         review_tags = parsed_page.find_all(
-            class_=search_class, limit=nreviews - len(reviews)
+            class_=REVIEW_CLASS, limit=nreviews - len(reviews)
         )
         reviews.extend([get_review_info(tag) for tag in review_tags])
         current_page += 1

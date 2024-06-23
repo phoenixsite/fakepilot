@@ -5,7 +5,6 @@ from fakepilot import extract_reviews, search
 
 
 class TestSite(unittest.TestCase):
-
     def test_required_attrs(self):
 
         query, ncompanies = "burger", 2

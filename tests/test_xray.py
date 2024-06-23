@@ -12,7 +12,6 @@ BASE_DIR = Path(__file__).resolve().parent
 
 
 class TestXray(unittest.TestCase):
-
     def setUp(self):
 
         data_dir = os.path.join(BASE_DIR, "data")
@@ -78,16 +77,13 @@ class TestXray(unittest.TestCase):
         # page, so we provide dummy data
         dummy_score = 2.5
         dummy_nreviews = 21
-        
+
         self.cdocs = []
         for source in self.sources:
-            with open(source, encoding='utf-8') as f:
-                self.cdocs.append(CompanyDoc(
-                    f.read(),
-                    PARSER,
-                    dummy_score,
-                    dummy_nreviews
-                ))
+            with open(source, encoding="utf-8") as f:
+                self.cdocs.append(
+                    CompanyDoc(f.read(), PARSER, dummy_score, dummy_nreviews)
+                )
 
     def test_extract_name(self):
         """Test that the name is correctly extracted"""

@@ -2,8 +2,6 @@
 Defines the main operations that enable the access to the scrapped data.
 """
 
-from urllib import request
-
 from ._xray import extract_reviews, get_companies_info
 
 
