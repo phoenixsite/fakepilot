@@ -1,6 +1,7 @@
 # Fakepilot
 
 [![Build Status](https://github.com/phoenixsite/fakepilot/actions/workflows/python-app.yml/badge.svg)](https://github.com/phoenixsite/fakepilot/actions/workflows/python-app.yml)
+[![PyPI version](https://badge.fury.io/py/fakepilot.svg)](https://pypi.org/project/fakepilot/)
 
 [Trustpilot](https://www.trustpilot.com/) scrapping Python package.
 Extract online business reviews and integrate it on your code.
