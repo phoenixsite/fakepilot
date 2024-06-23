@@ -3,10 +3,18 @@ Defines the main operations that enable the access to the scrapped data.
 """
 
 from urllib import request
-from ._xray import get_companies_info, extract_reviews
 
-def search(query, ncompanies=10, country="united states",
-           with_reviews=False, nreviews=5, required_attrs=None):
+from ._xray import extract_reviews, get_companies_info
+
+
+def search(
+    query,
+    ncompanies=10,
+    country="united states",
+    with_reviews=False,
+    nreviews=5,
+    required_attrs=None,
+):
     """
     Return the search results that match a given query.
 
@@ -47,7 +55,7 @@ def search(query, ncompanies=10, country="united states",
            20. ``'sverige'``
            21. ``'united kingdom'``
            22. ``'united states'``
-        
+
     :type country: str, optional
     :param with_reviews: Indicates whether the companies reviews are
            extracted.
@@ -126,10 +134,11 @@ def search(query, ncompanies=10, country="united states",
     if not query:
         raise ValueError("Query not provided. There must be at least a character.")
 
-    companies = get_companies_info(country, query,
-                                   ncompanies, required_attrs)
+    companies = get_companies_info(country, query, ncompanies, required_attrs)
 
     if with_reviews:
-        companies = [company | {"reviews": extract_reviews(company["tp_url"], nreviews)}
-                     for company in companies]
+        companies = [
+            company | {"reviews": extract_reviews(company["tp_url"], nreviews)}
+            for company in companies
+        ]
     return companies
