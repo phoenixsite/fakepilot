@@ -17,14 +17,14 @@ class TestXray(unittest.TestCase):
         data_dir = os.path.join(BASE_DIR, "data")
 
         self.sources = [
-            "beautytheshop.com.htm",
-            "www.granada.no.htm",
-            "djmania.es.htm",
-            "www.burgerking.dk.htm",
-            "burgerking.no.htm",
-            "www.burgerking.fr.htm",
-            "twenix.es.htm",
-            "elejidoshopping.es.htm",
+            "beautytheshop.com.txt",
+            "www.granada.no.txt",
+            "djmania.es.txt",
+            "www.burgerking.dk.txt",
+            "burgerking.no.txt",
+            "www.burgerking.fr.txt",
+            "twenix.es.txt",
+            "elejidoshopping.es.txt",
         ]
 
         self.sources = [os.path.join(data_dir, source) for source in self.sources]
