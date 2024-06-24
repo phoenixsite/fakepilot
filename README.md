@@ -1,23 +1,35 @@
 # Fakepilot
 
 [![Build Status](https://github.com/phoenixsite/fakepilot/actions/workflows/python-app.yml/badge.svg)](https://github.com/phoenixsite/fakepilot/actions/workflows/python-app.yml)
-[![PyPI version](https://badge.fury.io/py/fakepilot.svg)](https://pypi.org/project/fakepilot/)
 
 [Trustpilot](https://www.trustpilot.com/) scrapping Python package.
 Extract online business reviews and integrate it on your code.
 It is based on [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/).
 
-## Setup
+## Features
+* Simple searching functionalitites.
+* Support the selection of any country available in Trustpilot.
+* Extraction of fine-grained data from business reviews.
+* Use Trustpilot URLs or local file from where extract the information.
 
-1. Clone the repository or download the zip package
+## Installation
+[![PyPI version](https://badge.fury.io/py/fakepilot.svg)](https://pypi.org/project/fakepilot/)
 
+fakepilot is available on `pip`. You can install fakepilot from `pip` with
+
+```bash
+pip install fakepilot
 ```
+
+To install fakepilot from the GitHub source, clone the repository with `git`:
+
+```bash
 git clone https://github.com/phoenixsite/fakepilot.git
 ```
 
-2. Install the package with `pip`. This will also install its dependencies.
+Then, change your current directory to the one you cloned and install it with `pip`:
 
-``` sh
+```bash
 cd fakepilot
 pip install .
 ```
