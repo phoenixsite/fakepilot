@@ -19,7 +19,6 @@ PARSER = "lxml"
 REVIEW_CLASS = re.compile("styles_reviewCardInner")
 BUSINESS_CLASS = re.compile("businessUnitResult")
 
-
 # Used to speed up the BeautifulSoup detection of the markup encoding
 TPENCODING = "utf-8"
 
@@ -347,6 +346,29 @@ def get_company_info(result_tag, country):
     }
 
 
+def parse_page(page, only_class=None):
+    """
+    Parse page with BeautifulSoup.
+
+    Set the lxml's parser and the parse_only parameter of
+    the BeautifulSoup constructor, if passed.
+
+    :param page: HTML document to be parsed.
+    :type page: str
+    :param only_class: Type of tags to be analysed.
+    :type only_class: :ref:`bs4:SoupStrainer`
+    :return: Parsed page with BeautifulSoup class.
+    :rtype: :ref:`bs4:BeautifulSoup`
+    """
+
+    return BeautifulSoup(
+        page,
+        PARSER,
+        from_encoding=TPENCODING,
+        parse_only=only_class,
+    )
+
+
 def tp_open_url(req):
     """
     Open a Trustpilot URL and manages the response from the site.
@@ -362,7 +384,7 @@ def tp_open_url(req):
 
     try:
         with request.urlopen(req) as r:
-            parsed_page = BeautifulSoup(r, PARSER, from_encoding=TPENCODING)
+            parsed_page = parse_page(r)
     except HTTPError as e:
         if e.code == 403:
             raise RuntimeError(
@@ -424,12 +446,7 @@ def get_companies_info(country, query, nbusiness, required_attrs):
 
         try:
             with request.urlopen(req) as r:
-                search_page = BeautifulSoup(
-                    r,
-                    PARSER,
-                    from_encoding=TPENCODING,
-                    parse_only=only_results,
-                )
+                search_page = parse_page(r, only_results)
         except HTTPError as e:
             if e.code == 403:
                 warnings.warn(
@@ -451,16 +468,12 @@ def get_companies_info(country, query, nbusiness, required_attrs):
         try:
             for tag in result_tags:
                 companies.append(get_company_info(tag, country))
-        except HTTPError as e:
-            if e.code == 403:
-                warnings.warn(
-                    "Forbidden access to Trustpilot. You've made too many "
-                    "requests to Trustpilot. Returning the fecthed companies.",
-                    RuntimeWarning,
-                )
-                break
-
-            raise e
+        except RuntimeError as e:
+            warnings.warn(
+                str(e),
+                RuntimeWarning,
+            )
+            break
 
         current_page += 1
 
@@ -511,7 +524,7 @@ def extract_date(tag):
     date_node = tag.find(attrs={"data-service-review-date-time-ago": "true"})
 
     if not date_node:
-        raise ValueError("""The tag where the review's date should be isn't present.""")
+        raise ValueError("The tag where the review's date should be isn't present.")
 
     return datetime.fromisoformat(date_node["datetime"].split(".")[0])
 
@@ -579,14 +592,14 @@ def extract_reviews(source, nreviews):
     only_reviews = SoupStrainer(class_=REVIEW_CLASS)
 
     if os.path.isfile(source):
-        is_local = True
         with open(source) as f:
-            parsed_page = BeautifulSoup(f, PARSER, from_encoding=TPENCODING)
-    else:
-        is_local = False
-        parsed_page = tp_open_url(source)
+            parsed_page = parse_page(f)
 
-    max_npages = get_npages(parsed_page) if not is_local else 1
+        max_npages = get_npages(parsed_page)
+    else:
+        parsed_page = tp_open_url(source)
+        max_npages = 1
+
     review_tags = parsed_page.find_all(class_=REVIEW_CLASS, limit=nreviews)
     reviews = [get_review_info(tag) for tag in review_tags]
     current_page = 2
@@ -597,9 +610,7 @@ def extract_reviews(source, nreviews):
             with request.urlopen(
                 utils.get_company_url_paged(source, current_page)
             ) as r:
-                parsed_page = BeautifulSoup(
-                    r, PARSER, from_encoding=TPENCODING, parse_only=only_reviews
-                )
+                parsed_page = parse_page(r, only_reviews)
         except HTTPError as e:
             if e.code == 403:
                 warnings.warn(
