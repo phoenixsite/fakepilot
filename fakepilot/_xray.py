@@ -92,181 +92,99 @@ def extract_nreviews_score_search(tag):
     return (mini_box[1], mini_box[3])
 
 
-class CompanyDoc(BeautifulSoup):
+def extract_url(tag):
     """
-    Represents the HTML page of a company as a BeautifulSoup data
-    structure.
+    Return the URL of the company.
 
-    It is used to avoid double checkings when restrictions over the
-    attributes of a company are imposed. Also, multiple attributes are
-    included in the same tag, so when one of them is extracted
-    the other is got as well.  When an attribute is
-    extracted for the first time, then it is
-    saved in the object so following extractions doesn't need to get into
-    the HTML tree again.
-
-    :param markup: HTML page that contains the information of a business.
-    :type markup: http.client.HTTPResponse or str
-    :param parser: BeautifulSoup parser. The lmxml parser is used.
-                   See :ref:`bs4:parser-installation`.
-    :type parser: str
-    :param search_data: Company data extracted from the search page.
-    :type search_data: dict(str,)
+    Trustpilot uses the company registered URL to uniquely identify
+    a company. However, they aren't normalized. Sometimes they can be
+    ``www.company-site.es`` or ``company-site.es``. URL of the company
+    as it is stored in Trustpilot.
     """
 
-    def __init__(self, markup, parser, score, nreviews):
-        BeautifulSoup.__init__(self, markup, parser, from_encoding=TPENCODING)
+    business_url = tag.find(class_=re.compile("styles_websiteUrl"))
+    return "".join(business_url.strings)
 
-        if not score or not nreviews:
-            raise ValueError("A value for score and nreviews must be provided")
 
-        self._nreviews = nreviews
-        self._score = score
-        self._email = None
-        self._address = None
-        self._phone = None
+def extract_company_name(tag):
+    """Return the name of the company."""
+    return next(tag.find(class_=re.compile("title_displayName")).strings)
 
-    @cached_property
-    def url(self):
-        """
-        Return the URL of the company.
 
-        Trustpilot uses the company registered URL to uniquely identify
-        a company. However, they aren't normalized. Sometimes they can be
-        ``www.company-site.es`` or ``company-site.es``. The URL is returned
-        as it is on Trustpilot.
-        """
+def extract_rating_stats(tag):
+    """
+    Extract the number of reviews and the TrustScore.
 
-        business_url = self.find(class_=re.compile("styles_websiteUrl"))
-        return "".join(business_url.strings)
+    Both attributes are extracted simultaneously because they
+    are in the same tag.
+    """
 
-    @cached_property
-    def company_name(self):
-        """Return the name of the company."""
-        name_tag = self.find("h1", class_=re.compile("title_title"))
-        return next(name_tag.find(class_=re.compile("title_displayName")).strings)
+    nreviews_tag = tag.find(attrs={"data-reviews-count-typography": "true"})
 
-    def _extract_rating_stats(self):
-        """
-        Extract the number of reviews and the TrustScore.
+    if not nreviews_tag:
+        raise RuntimeError(
+            "The tag where the score and the number of reviews "
+            "are hasn't been found."
+        )
 
-        Both attributes are extracted simultaneously because they
-        are in the same tag.
-        """
+    nreviews = (
+        nreviews_tag.string.split()[0]
+        if nreviews_tag.string
+        else next(nreviews_tag.strings)
+    )
 
-        nreviews_tag = self.find(attrs={"data-reviews-count-typography": "true"})
+    # The thousand separator is different for some countries
+    nreviews = re.sub(r"[.,\xa0]", "", nreviews)
+    score_tag = tag.find(attrs={"data-rating-typography": "true"})
+    score = score_tag.string.replace(",", ".")
+    return (int(nreviews), float(score))
 
-        if nreviews_tag:
-            nreviews = (
-                nreviews_tag.string.split()[0]
-                if nreviews_tag.string
-                else next(nreviews_tag.strings)
-            )
 
-            # The thousand separator is different for some countries
-            nreviews = re.sub(r"[.,\xa0]", "", nreviews)
-            score_tag = self.find(attrs={"data-rating-typography": "true"})
-            score = score_tag.string.replace(",", ".")
+def extract_contact_info(tag):
+    """
+    Extract the phone, address and email fields.
 
-            self._nreviews = int(nreviews)
-            self._score = float(score)
+    :return: A pair whose first element is the phone number, then
+    the email and finally the address.
+    """
 
-    @property
-    def nreviews(self):
-        """Return the number of reviews."""
-        self._extract_rating_stats()
-        return self._nreviews
+    phone = email = address = None
 
-    @property
-    def score(self):
-        """Return the TrustScore."""
-        self._extract_rating_stats()
-        return self._score
+    # As the address field does not have a specific structure,
+    # the other two are searched and the last one would the
+    # address field
+    phone_re = re.compile(r"^\+?\d[\d-]+")
+    email_re = re.compile(
+        r"([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+"
+    )
 
-    def _extract_contact_info(self):
-        """Extract the phone, address and email fields."""
+    contact_elements = tag.findAll("li", class_=re.compile("styles_contactInfoElement"))
 
-        def is_side_column(css_class):
-            return (
-                css_class is not None
-                and "styles_sideColumnCard" in css_class
-                and "paper_paper" in css_class
-            )
+    for contact_info in contact_elements:
 
-        info_tag = self.find(class_=is_side_column)
+        line = ",".join(contact_info.strings)
+        field, count = None, 0
 
-        # The three fields are grouped in the same 'address' tag
-        address_tag = info_tag.find("address")
-        parsed_data = {"phone": None, "email": None, "address": None}
+        if phone_re.search(line):
+            phone = line
+        elif email_re.search(line):
+            email = line
+        else:
+            address = line
 
-        if address_tag:
+    return (phone, email, address)
 
-            # As the address field does not have a specific structure,
-            # the other two are searched and the last one would the
-            # address field
-            reg_fields = [
-                ("phone", re.compile(r"^\+?\d[\d-]+")),
-                (
-                    "email",
-                    re.compile(
-                        r"([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+"
-                    ),
-                ),
-            ]
-            contact_elements = address_tag.findAll(
-                "li", class_=re.compile("styles_contactInfoElement")
-            )
 
-            for contact_info in contact_elements:
+def extract_categories(tag):
+    """Return the company's category list."""
+    cat_section = tag.find(class_=re.compile("styles_categoriesList"))
+    categories = None
 
-                line = ",".join(contact_info.strings)
-                field, count = None, 0
+    if cat_section:
+        cat_refs = cat_section.findAll(href=re.compile("/categories/"))
+        categories = [cat_tag.string for cat_tag in cat_refs]
 
-                while not field and count < len(reg_fields):
-
-                    if reg_fields[count][1].search(line):
-                        field = reg_fields[count][0]
-
-                    count += 1
-
-                if not field:
-                    field = "address"
-
-                parsed_data[field] = line
-
-            self._email = parsed_data["email"]
-            self._phone = parsed_data["phone"]
-            self._address = parsed_data["address"]
-
-    @property
-    def email(self):
-        """Return the company's contact email address."""
-        self._extract_contact_info()
-        return self._email
-
-    @property
-    def phone(self):
-        """Return the company's contact phone number."""
-        self._extract_contact_info()
-        return self._phone
-
-    @property
-    def address(self):
-        """Return the company's address."""
-        self._extract_contact_info()
-        return self._address
-
-    @cached_property
-    def categories(self):
-        """Return the company's category list."""
-        cat_section = self.find(class_=re.compile("styles_categoriesList"))
-        categories = None
-
-        if cat_section:
-            cat_refs = cat_section.findAll(href=re.compile("/categories/"))
-            categories = [cat_tag.string for cat_tag in cat_refs]
-
-        return categories
+    return categories
 
 
 def get_npages(tag):
@@ -309,43 +227,6 @@ def get_npages(tag):
     return npages
 
 
-def get_company_info(result_tag, country):
-    """Extract the data of a company."""
-    company_url = result_tag.find(href=re.compile("/review/")).get("href")
-
-    # The number of reviews and TrustScore is passed to CompanyDoc
-    # in case the company's website has closed, so the tag in the
-    # company page where those attributes were supposed to be
-    # are not shown.
-    # Example: https://www.trustpilot.com/review/rumbles.dk
-    score, nreviews = extract_nreviews_score_search(result_tag)
-    tp_comp_url = utils.get_tp_company_url(country, company_url)
-
-    try:
-        with request.urlopen(tp_comp_url) as r:
-            comp_page = CompanyDoc(r, PARSER, score, nreviews)
-    except HTTPError as e:
-        if e.code == 403:
-            raise RuntimeError(
-                "Forbidden access to Trustpilot. You've made too much"
-                "requests tom o Trustpilot."
-            ) from e
-
-        raise e
-
-    return {
-        "name": comp_page.company_name,
-        "url": comp_page.url,
-        "nreviews": comp_page.nreviews,
-        "score": comp_page.score,
-        "categories": comp_page.categories,
-        "email": comp_page.email,
-        "phone": comp_page.phone,
-        "address": comp_page.address,
-        "tp_url": tp_comp_url,
-    }
-
-
 def parse_page(page, only_class=None):
     """
     Parse page with BeautifulSoup.
@@ -369,34 +250,6 @@ def parse_page(page, only_class=None):
     )
 
 
-def tp_open_url(req):
-    """
-    Open a Trustpilot URL and manages the response from the site.
-
-    It checks if the response from Trustpilot indicates that the
-    access is forbidden.
-
-    :param req: Request that will be sent.
-    :type req: request.Request
-    :return: Parsed page.
-    :rtype: :ref:`bs4:BeautifulSoup`
-    """
-
-    try:
-        with request.urlopen(req) as r:
-            parsed_page = parse_page(r)
-    except HTTPError as e:
-        if e.code == 403:
-            raise RuntimeError(
-                "Forbidden access to Trustpilot. You've made too many "
-                "requests. No results have been fetched."
-            ) from e
-
-        raise e
-
-    return parsed_page
-
-
 def construct_request(url):
     """Construct a request for the given url."""
     # Artificial header. TODO: Random generation of headers and
@@ -406,6 +259,89 @@ def construct_request(url):
             rv:102.0) Gecko/20100101 Firefox/102.0"""
     }
     return request.Request(url, headers=hdr)
+
+
+def tp_open_url(url):
+    """
+    Open a Trustpilot URL and manages the response from the site.
+
+    It checks if the response from Trustpilot indicates that the
+    access is forbidden.
+
+    :param url: A Trustpilot URL
+    :type url: str
+    :return: Parsed page.
+    :rtype: :ref:`bs4:BeautifulSoup`
+    """
+
+    req = construct_request(url)
+
+    try:
+        with request.urlopen(req) as r:
+            parsed_page = parse_page(r)
+    except HTTPError as e:
+        if e.code == 403:
+            raise RuntimeError(
+                "Forbidden access to Trustpilot. You've made too many " "requests."
+            ) from e
+
+        raise e
+
+    return parsed_page
+
+
+def get_company_info(tag):
+    """Extract the data of a company."""
+    try:
+        nreviews, score = extract_rating_stats(tag)
+    except RuntimeError:
+        score = nreviews = None
+
+    phone, email, address = extract_contact_info(tag)
+
+    return {
+        "name": extract_company_name(tag),
+        "url": extract_url(tag),
+        "nreviews": nreviews,
+        "score": score,
+        "categories": extract_categories(tag),
+        "email": email,
+        "phone": phone,
+        "address": address,
+    }
+
+
+def analyse_result_tag(tag, country):
+    """
+    Analyse the tag and extract the information of
+    the company the tag refers to.
+
+    :param tag: Result tag from the search page.
+    :type tag: :ref:`bs4:Tag`
+    :param country: Trustpilot's country to search on.
+    :type country: str
+    :return: Company's data
+    :rtype: dict(str,)
+    """
+
+    company_url = tag.find(href=re.compile("/review/")).get("href")
+    tp_comp_url = utils.get_tp_company_url(country, company_url)
+    company_page = tp_open_url(tp_comp_url)
+    company = get_company_info(company_page)
+    company["tp_url"] = tp_comp_url
+
+    # The number of reviews and TrustScore is passed to CompanyDoc
+    # in case the company's website has closed, so the tag in the
+    # company page where those attributes were supposed to be
+    # are not shown.
+    # Example: https://www.trustpilot.com/review/rumbles.dk
+    if not (company["score"] and company["nreviews"]):
+        (
+            company["score"],
+            company["nreviews"],
+        ) = extract_nreviews_score_search(tag)
+
+    return company
 
 
 def get_companies_info(country, query, nbusiness, required_attrs):
@@ -428,35 +364,29 @@ def get_companies_info(country, query, nbusiness, required_attrs):
     """
 
     only_results = SoupStrainer(class_=BUSINESS_CLASS)
-    req = construct_request(utils.get_search_url(country, query))
 
-    parsed_page = tp_open_url(req)
+    parsed_page = tp_open_url(utils.get_search_url(country, query))
     max_npages = get_npages(parsed_page)
     result_tags = parsed_page.find_all(class_=BUSINESS_CLASS, limit=nbusiness)
 
     if required_attrs:
         result_tags = [tag for tag in result_tags if has_attrs(tag, required_attrs)]
 
-    companies = [get_company_info(tag, country) for tag in result_tags]
+    companies = [analyse_result_tag(tag, country) for tag in result_tags]
     current_page = 2
 
     while current_page <= max_npages and len(companies) < nbusiness:
 
-        req.full_url = utils.get_search_url(country, query, current_page)
-
         try:
-            with request.urlopen(req) as r:
-                search_page = parse_page(r, only_results)
-        except HTTPError as e:
-            if e.code == 403:
-                warnings.warn(
-                    "Forbidden access to Trustpilot. You've made too many "
-                    "requests. Returning the fecthed companies.",
-                    RuntimeWarning,
-                )
-                break
-
-            raise e
+            search_page = tp_open_url(
+                utils.get_search_url(country, query, current_page)
+            )
+        except RuntimeError as e:
+            warnings.warn(
+                str(e) + " Returning the fecthed companies.",
+                RuntimeWarning,
+            )
+            break
 
         result_tags = search_page.find_all(
             class_=BUSINESS_CLASS, limit=(nbusiness - len(companies))
@@ -467,10 +397,12 @@ def get_companies_info(country, query, nbusiness, required_attrs):
 
         try:
             for tag in result_tags:
-                companies.append(get_company_info(tag, country))
+                company = analyse_result_tag(tag, country)
+                companies.append(company)
+
         except RuntimeError as e:
             warnings.warn(
-                str(e),
+                str(e) + " Returning the fecthed companies.",
                 RuntimeWarning,
             )
             break
@@ -595,10 +527,12 @@ def extract_reviews(source, nreviews):
         with open(source) as f:
             parsed_page = parse_page(f)
 
-        max_npages = get_npages(parsed_page)
-    else:
-        parsed_page = tp_open_url(source)
         max_npages = 1
+
+    else:
+        req = construct_request(source)
+        parsed_page = tp_open_url(source)
+        max_npages = get_npages(parsed_page)
 
     review_tags = parsed_page.find_all(class_=REVIEW_CLASS, limit=nreviews)
     reviews = [get_review_info(tag) for tag in review_tags]
@@ -607,20 +541,13 @@ def extract_reviews(source, nreviews):
     while current_page <= max_npages and len(reviews) < nreviews:
 
         try:
-            with request.urlopen(
-                utils.get_company_url_paged(source, current_page)
-            ) as r:
-                parsed_page = parse_page(r, only_reviews)
-        except HTTPError as e:
-            if e.code == 403:
-                warnings.warn(
-                    "Forbidden access to Trustpilot. You've made too many "
-                    "requests. Returning the fecthed the reviews.",
-                    RuntimeWarning,
-                )
-                break
-
-            raise e
+            parsed_page = tp_open_url(utils.get_company_url_paged(source, current_page))
+        except RuntimeError as e:
+            warnings.warn(
+                str(e) + " Returning the fecthed the reviews.",
+                RuntimeWarning,
+            )
+            break
 
         review_tags = parsed_page.find_all(
             class_=REVIEW_CLASS, limit=nreviews - len(reviews)

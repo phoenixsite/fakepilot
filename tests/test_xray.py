@@ -5,7 +5,7 @@ from pathlib import Path
 
 from bs4 import BeautifulSoup
 
-from fakepilot._xray import CompanyDoc, get_companies_info, get_npages
+from fakepilot._xray import get_company_info, get_companies_info, get_npages, parse_page
 
 PARSER = "lxml"
 BASE_DIR = Path(__file__).resolve().parent
@@ -78,25 +78,33 @@ class TestXray(unittest.TestCase):
         dummy_score = 2.5
         dummy_nreviews = 21
 
-        self.cdocs = []
+        self.companies = []
+        self.parsed_pages = []
+
         for source in self.sources:
             with open(source, encoding="utf-8") as f:
-                self.cdocs.append(
-                    CompanyDoc(f.read(), PARSER, dummy_score, dummy_nreviews)
-                )
+                parsed_page = parse_page(f)
+                self.parsed_pages.append(parsed_page)
+                company = get_company_info(parsed_page)
+
+                if not (company["score"] and company["nreviews"]):
+                    company["score"] = dummy_score
+                    company["nreviews"] = dummy_nreviews
+
+                self.companies.append(company)
 
     def test_extract_name(self):
         """Test that the name is correctly extracted"""
-        for i, r in enumerate(self.cdocs):
-            name = r.company_name
+        for i, r in enumerate(self.companies):
+            name = r["name"]
             with self.subTest(source=self.sources[i]):
                 self.assertEqual(name, self.solutions["names"][i])
 
     def test_extract_rating_stats(self):
         """Test that the number of reviews and score are correctly extracted"""
-        for i, r in enumerate(self.cdocs):
-            nreviews = r.nreviews
-            score = r.score
+        for i, r in enumerate(self.companies):
+            nreviews = r["nreviews"]
+            score = r["score"]
             with self.subTest(source=self.sources[i]):
                 self.assertEqual((nreviews, score), self.solutions["rating_stats"][i])
 
@@ -106,8 +114,8 @@ class TestXray(unittest.TestCase):
         for some example companies.
         """
 
-        for i, r in enumerate(self.cdocs):
-            categories = r.categories
+        for i, r in enumerate(self.companies):
+            categories = r["categories"]
             with self.subTest(source=self.sources[i]):
                 self.assertEqual(categories, self.solutions["categories"][i])
 
@@ -116,7 +124,7 @@ class TestXray(unittest.TestCase):
         Test that the number of pages extracted is correct.
         """
 
-        for i, r in enumerate(self.cdocs):
+        for i, r in enumerate(self.parsed_pages):
             npages = get_npages(r)
             with self.subTest(source=self.sources[i]):
                 self.assertEqual(npages, self.solutions["npages"][i])

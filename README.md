@@ -15,7 +15,7 @@ It is based on [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/).
 ## Installation
 [![PyPI version](https://badge.fury.io/py/fakepilot.svg)](https://pypi.org/project/fakepilot/)
 
-fakepilot is available on `pip`. You can install fakepilot from `pip` with
+fakepilot is available on `pip`. You can install fakepilot from it with
 
 ```bash
 pip install fakepilot
