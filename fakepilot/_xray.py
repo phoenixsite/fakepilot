@@ -6,9 +6,7 @@ import re
 from datetime import datetime
 from urllib.parse import parse_qs, urlparse
 
-from bs4 import BeautifulSoup, SoupStrainer
-
-from . import utils
+from bs4 import BeautifulSoup
 
 PARSER = "lxml"
 REVIEW_CLASS = re.compile("styles_reviewCardInner")
@@ -158,7 +156,6 @@ def extract_contact_info(tag):
     for contact_info in contact_elements:
 
         line = ",".join(contact_info.strings)
-        field, count = None, 0
 
         if phone_re.search(line):
             phone = line

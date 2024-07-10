@@ -1,6 +1,8 @@
 import os
 import re
 
+import warnings
+
 from bs4 import SoupStrainer
 from urllib import request
 from urllib.error import HTTPError
@@ -123,7 +125,7 @@ def get_reviews(company_page, is_local, nreviews, tp_comp_url):
             break
 
         review_tags = parsed_page.find_all(
-            class_=REVIEW_CLASS, limit=nreviews - len(reviews)
+            class_=xray.REVIEW_CLASS, limit=nreviews - len(reviews)
         )
         reviews.extend([xray.extract_review_info(tag) for tag in review_tags])
         current_page += 1
@@ -258,8 +260,6 @@ def search(
 
     if not query:
         raise ValueError("Query not provided. There must be at least a character.")
-
-    only_results = SoupStrainer(class_=xray.BUSINESS_CLASS)
 
     parsed_page = tp_open_url(utils.get_search_url(country, query))
     max_npages = xray.get_npages(parsed_page)
