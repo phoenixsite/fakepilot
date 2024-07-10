@@ -17,7 +17,7 @@ It is based on [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/).
 ## Installation
 [![PyPI version](https://badge.fury.io/py/fakepilot.svg)](https://pypi.org/project/fakepilot/)
 
-fakepilot is available on `pip`. You can install fakepilot from it with
+fakepilot is available on Pypi. You can install fakepilot from it with
 
 ```bash
 pip install fakepilot
@@ -69,13 +69,13 @@ The following block extracts ten reviews from the
 specified URL:
 
 ```python
-get_company("https://www.trustpilot.com/review/www.starbucks.com", 10)
+fp.get_company("https://www.trustpilot.com/review/www.starbucks.com", 10)
 ```
 
 The following block extract the information and ten reviews from a local file:
 
 ```python
-get_company("my_file.html", True, 10)
+fp.get_company("my_file.html", True, 10)
 ```
 
 ## Documentation
