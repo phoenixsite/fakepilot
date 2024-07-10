@@ -5,9 +5,8 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "fakepilot"
 description = "Scrapping tool for Trustpilot"
-readme.content-type = "text/markdown"
-readme.file = "README.md"
-license = {text = "MIT License"}
+readme = "README.md"
+license = {text = "MIT"}
 authors = [
   { name = "Carlos Romero Cruz", email = "phoenixsitegit@outlook.com" },
 ]
