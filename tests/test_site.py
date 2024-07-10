@@ -1,7 +1,7 @@
 import unittest
 from functools import reduce
 
-from fakepilot import extract_reviews, search
+from fakepilot import search, get_company
 
 
 class TestSite(unittest.TestCase):
@@ -24,6 +24,6 @@ class TestSite(unittest.TestCase):
         nreviews = [1, 2, 5]
 
         for nreview in nreviews:
-            reviews = extract_reviews(url, nreview)
+            company = get_company(url, with_reviews=True, nreviews=nreview)
             with self.subTest(nreviews=nreview):
-                self.assertEqual(nreview, len(reviews))
+                self.assertEqual(nreview, len(company["reviews"]))

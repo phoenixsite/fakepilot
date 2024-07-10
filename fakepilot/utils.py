@@ -4,6 +4,8 @@ functionality of fakepilot.
 """
 
 from urllib.parse import urlencode
+from urllib import request
+
 
 HTTP_PROT = "https"
 BASE_URL = "trustpilot.com"
@@ -11,58 +13,31 @@ SEARCH_PAGE = "search"
 QUERY_PARAM = "query"
 PAGE_PARAM = "page"
 
-# Search results and shown reviews vary between countries
-COUNTRY_CODE = [
-    "us",
-    "uk",
-    "es",
-    "dk",
-    "at",
-    "ch",
-    "de",
-    "au",
-    "ca",
-    "ie",
-    "nz",
-    "fi",
-    "fr-be",
-    "nl-be",
-    "fr",
-    "it",
-    "jp",
-    "no",
-    "nl",
-    "pl",
-    "br",
-    "pt",
-    "se",
-]
-COUNTRY_NAMES = [
-    "united states",
-    "united kingdom",
-    "espana",
-    "danmark",
-    "osterreich",
-    "schweiz",
-    "deutschland",
-    "australia",
-    "canada",
-    "ireland",
-    "new zealand",
-    "suomi",
-    "belgique",
-    "belgie",
-    "france",
-    "italia",
-    "japan",
-    "norge",
-    "nederland",
-    "polska",
-    "brasil",
-    "portugal",
-    "sverige",
-]
-COUNTRIES = dict(zip(COUNTRY_NAMES, COUNTRY_CODE))
+COUNTRIES = {
+    "united states": "us",
+    "united kingdom": "uk",
+    "espana": "es",
+    "danmark": "dk",
+    "osterreich": "at",
+    "schweiz": "ch",
+    "deutschland": "de",
+    "australia": "au",
+    "canada": "ca",
+    "ireland": "ie",
+    "new zealand": "nz",
+    "suomi": "fi",
+    "belgique": "fr-be",
+    "belgie": "nl-be",
+    "france": "fr",
+    "italia": "it",
+    "japan": "jp",
+    "norge": "no",
+    "nederland": "nl",
+    "polska": "pl",
+    "brasil": "br",
+    "portugal": "pt",
+    "sverige": "se",
+}
 
 
 def pretty_countries():
@@ -111,9 +86,19 @@ def get_search_url(country, string_query, npage=1):
     return f"{url}?{data}"
 
 
-def get_tp_company_url(country, company_url):
-    """Return the full Trustpilot company's URL for a specific country."""
+def get_tp_company_url(company_url, country="us"):
+    """
+    Return the full Trustpilot company's URL for a specific country.
+
+    :param company_url: Trustpilot company's subpage (review/my-site.com) or
+           id of the company (my-site.com).
+    :type company_url: str
+    """
     full_address = get_country_address(country)
+
+    if len(company_url.split("/")) == 1:
+        company_url = f"/review/{company_url}"
+
     return f"{HTTP_PROT}://{full_address}{company_url}?languages=all"
 
 
@@ -129,3 +114,14 @@ def get_company_url_paged(tp_company_url, npage=1):
     :rtype: str
     """
     return f"{tp_company_url}&page={npage}" if npage != 1 else tp_company_url
+
+
+def construct_request(url):
+    """Construct a request for the given url."""
+    # Artificial header. TODO: Random generation of headers and
+    # inter-request time.
+    hdr = {
+        "User-Agent": """Mozilla/5.0 (Windows NT 10.0; Win64; x64;
+            rv:102.0) Gecko/20100101 Firefox/102.0"""
+    }
+    return request.Request(url, headers=hdr)

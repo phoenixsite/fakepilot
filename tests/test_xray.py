@@ -5,7 +5,7 @@ from pathlib import Path
 
 from bs4 import BeautifulSoup
 
-from fakepilot._xray import get_company_info, get_companies_info, get_npages, parse_page
+from fakepilot import _xray as xray
 
 PARSER = "lxml"
 BASE_DIR = Path(__file__).resolve().parent
@@ -83,9 +83,9 @@ class TestXray(unittest.TestCase):
 
         for source in self.sources:
             with open(source, encoding="utf-8") as f:
-                parsed_page = parse_page(f)
+                parsed_page = xray.parse_page(f, None)
                 self.parsed_pages.append(parsed_page)
-                company = get_company_info(parsed_page)
+                company = xray.extract_company_info(parsed_page)
 
                 if not (company["score"] and company["nreviews"]):
                     company["score"] = dummy_score
@@ -125,19 +125,6 @@ class TestXray(unittest.TestCase):
         """
 
         for i, r in enumerate(self.parsed_pages):
-            npages = get_npages(r)
+            npages = xray.get_npages(r)
             with self.subTest(source=self.sources[i]):
                 self.assertEqual(npages, self.solutions["npages"][i])
-
-    def test_number_companies(self):
-        """
-        Test that the number of companies extracted is correct.
-        """
-
-        string_query = "granada"
-        country = "Espana"
-        nbusinesses = [2, 5, 10]
-
-        for nbusiness in nbusinesses:
-            urls = get_companies_info(country, string_query, nbusiness, None)
-            self.assertEqual(nbusiness, len(urls))

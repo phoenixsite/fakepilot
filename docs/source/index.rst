@@ -1,7 +1,7 @@
 Fakepilot's documentation
 =========================
 
-**Fakepilot** is a Python package for scrapings data from the `Trustpilot web page
+**Fakepilot** is a Python package for scrapping data from the `Trustpilot web page
 <https://www.trustpilot.com/>`_.
 
 .. toctree::
@@ -9,3 +9,9 @@ Fakepilot's documentation
    :maxdepth: 2
 
    api
+
+Main functionality
+------------------
+
+.. autofunction:: fakepilot.search
+.. autofunction:: fakepilot.get_company

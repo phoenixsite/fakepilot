@@ -50,34 +50,45 @@ All the Trustpilot country-specific sites can be used to make the queries.
 For instance, the Norwegian Trustpilot site can be used:
 
 ``` python
-fp.search("starbucks", 1, "norge")
+fp.search("starbucks", 1, country="norge")
 ```
 
 If it is required that all the results include a specific parameter, e.g.
-the phone number of the company, you can specify
+the phone number of the company, you can specify it
 in the `search` function:
 
 ```python
-fp.search("starbucks", 1, "norge",
-		       with_reviews=False, nreviews=1, required_attrs="phone")
+fp.search("starbucks", 1, False, 1, "phone", "norge")
 ```
 
-Also, the reviews of a Trustpilot company page can be directly extracted
-using `extract_reviews``from a given URL or a local file.
+Also, the information of a Trustpilot company page can be directly extracted
+using ``get_company`` with a given URL or a local file.
 The following block extracts ten reviews from the
-specified page:
+specified URL:
 
 ```python
-get_reviews("https://www.trustpilot.com/review/www.starbucks.com", 10)
+get_company("https://www.trustpilot.com/review/www.starbucks.com", 10)
+```
+
+The following block extract the information and ten reviews from a local file:
+
+```python
+get_company("my_file.html", True, 10)
 ```
 
 ## Documentation
-For a detail description of all the options, you can build yourself the documentation
-in ``docs`` with [Sphinx](https://www.sphinx-doc.org/en/master/) or visit the
-[faekpilot documentation page](https://fakepilot.readthedocs.io).
+For a detail description of all the options you can visit the [fakepilot's
+official documentation site](https://fakepilot.readthedocs.io/)
+or you can build yourself
+in ``docs`` with [Sphinx](https://www.sphinx-doc.org/en/master/):
+
+```bash
+cd docs
+make html
+```
 
 ## Warning
-I strongly recomment using this scrapper with moderation and carefully.
+I strongly recommend using this scrapper with moderation and carefully.
 Searching for multiple expressions in a short period of time can generate
 a lot of requests and connections to the Trustpilot servers and may affect the
 operation of the website. **Be careful, respectful and responsible with

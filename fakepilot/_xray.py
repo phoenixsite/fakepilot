@@ -2,14 +2,9 @@
 This module defines how the data is scrapped from the Trustpilot site.
 """
 
-import os
 import re
-import warnings
 from datetime import datetime
-from functools import cached_property
-from urllib import request
 from urllib.parse import parse_qs, urlparse
-from urllib.error import HTTPError
 
 from bs4 import BeautifulSoup, SoupStrainer
 
@@ -28,7 +23,7 @@ def has_attrs(tag, attrs):
     Check that a company has registered on Trustpilot some attributes`.
 
     :param tag: HTML tag that should contain SVG icons.
-    :type tag: :ref:`bs4:Tag`
+    :type tag: :class:`bs4.Tag`
     :param attrs: Required attributes that the company must include.
     :type attrs: list[str] or str
     :return: ``True`` if all `attrs` are contained in `tag`, ``False`` otherwise.
@@ -82,7 +77,7 @@ def extract_nreviews_score_search(tag):
     the search page.
 
     :param tag: HTML tag analyzed.
-    :type tag: :ref:`bs4:Tag`
+    :type tag: :class:`bs4.Tag`
     :return: Number of reviews and Trustscore of a company.
     :rtype: tuple(float, int)
     """
@@ -145,7 +140,7 @@ def extract_contact_info(tag):
     Extract the phone, address and email fields.
 
     :return: A pair whose first element is the phone number, then
-    the email and finally the address.
+             the email and finally the address.
     """
 
     phone = email = address = None
@@ -192,7 +187,7 @@ def get_npages(tag):
     Get the number of pages from the search's result page.
 
     :param tag: HTML tag of a result-like page.
-    :type tag: :ref:`bs4:Tag`
+    :type tag: :class:`bs4.Tag`
     :return: the number of pages.
     :rtype: int
     """
@@ -227,7 +222,7 @@ def get_npages(tag):
     return npages
 
 
-def parse_page(page, only_class=None):
+def parse_page(page, only_class):
     """
     Parse page with BeautifulSoup.
 
@@ -237,9 +232,9 @@ def parse_page(page, only_class=None):
     :param page: HTML document to be parsed.
     :type page: str
     :param only_class: Type of tags to be analysed.
-    :type only_class: :ref:`bs4:SoupStrainer`
+    :type only_class: :class:`bs4.SoupStrainer`
     :return: Parsed page with BeautifulSoup class.
-    :rtype: :ref:`bs4:BeautifulSoup`
+    :rtype: :class:`bs4.BeautifulSoup`
     """
 
     return BeautifulSoup(
@@ -250,47 +245,7 @@ def parse_page(page, only_class=None):
     )
 
 
-def construct_request(url):
-    """Construct a request for the given url."""
-    # Artificial header. TODO: Random generation of headers and
-    # inter-request time.
-    hdr = {
-        "User-Agent": """Mozilla/5.0 (Windows NT 10.0; Win64; x64;
-            rv:102.0) Gecko/20100101 Firefox/102.0"""
-    }
-    return request.Request(url, headers=hdr)
-
-
-def tp_open_url(url):
-    """
-    Open a Trustpilot URL and manages the response from the site.
-
-    It checks if the response from Trustpilot indicates that the
-    access is forbidden.
-
-    :param url: A Trustpilot URL
-    :type url: str
-    :return: Parsed page.
-    :rtype: :ref:`bs4:BeautifulSoup`
-    """
-
-    req = construct_request(url)
-
-    try:
-        with request.urlopen(req) as r:
-            parsed_page = parse_page(r)
-    except HTTPError as e:
-        if e.code == 403:
-            raise RuntimeError(
-                "Forbidden access to Trustpilot. You've made too many " "requests."
-            ) from e
-
-        raise e
-
-    return parsed_page
-
-
-def get_company_info(tag):
+def extract_company_info(tag):
     """Extract the data of a company."""
     try:
         nreviews, score = extract_rating_stats(tag)
@@ -309,107 +264,6 @@ def get_company_info(tag):
         "phone": phone,
         "address": address,
     }
-
-
-def analyse_result_tag(tag, country):
-    """
-    Analyse the tag and extract the information of
-    the company the tag refers to.
-
-    :param tag: Result tag from the search page.
-    :type tag: :ref:`bs4:Tag`
-    :param country: Trustpilot's country to search on.
-    :type country: str
-    :return: Company's data
-    :rtype: dict(str,)
-    """
-
-    company_url = tag.find(href=re.compile("/review/")).get("href")
-    tp_comp_url = utils.get_tp_company_url(country, company_url)
-    company_page = tp_open_url(tp_comp_url)
-    company = get_company_info(company_page)
-    company["tp_url"] = tp_comp_url
-
-    # The number of reviews and TrustScore is passed to CompanyDoc
-    # in case the company's website has closed, so the tag in the
-    # company page where those attributes were supposed to be
-    # are not shown.
-    # Example: https://www.trustpilot.com/review/rumbles.dk
-    if not (company["score"] and company["nreviews"]):
-        (
-            company["score"],
-            company["nreviews"],
-        ) = extract_nreviews_score_search(tag)
-
-    return company
-
-
-def get_companies_info(country, query, nbusiness, required_attrs):
-    """
-    Get the Trustpilot data of the companies that match a query.
-
-    The number of extracted companies is the minimum of `nbusiness` and
-    the sum of the number of businesses of each result page.
-
-    :param country: Country whose Trustpilot page is used to scrape.
-    :type country: str
-    :param query: Query string.
-    :type query: str
-    :param required_attrs: Required attributes found in a company.
-           If a company does not include any of the ones in
-           required_attrs, it is discarded.
-    :type required_attrs: list[str] or str or None
-    :return: Trustpilot companies that match the query.
-    :rtype: list[dict(str,)]
-    """
-
-    only_results = SoupStrainer(class_=BUSINESS_CLASS)
-
-    parsed_page = tp_open_url(utils.get_search_url(country, query))
-    max_npages = get_npages(parsed_page)
-    result_tags = parsed_page.find_all(class_=BUSINESS_CLASS, limit=nbusiness)
-
-    if required_attrs:
-        result_tags = [tag for tag in result_tags if has_attrs(tag, required_attrs)]
-
-    companies = [analyse_result_tag(tag, country) for tag in result_tags]
-    current_page = 2
-
-    while current_page <= max_npages and len(companies) < nbusiness:
-
-        try:
-            search_page = tp_open_url(
-                utils.get_search_url(country, query, current_page)
-            )
-        except RuntimeError as e:
-            warnings.warn(
-                str(e) + " Returning the fecthed companies.",
-                RuntimeWarning,
-            )
-            break
-
-        result_tags = search_page.find_all(
-            class_=BUSINESS_CLASS, limit=(nbusiness - len(companies))
-        )
-
-        if required_attrs:
-            result_tags = [tag for tag in result_tags if has_attrs(tag, required_attrs)]
-
-        try:
-            for tag in result_tags:
-                company = analyse_result_tag(tag, country)
-                companies.append(company)
-
-        except RuntimeError as e:
-            warnings.warn(
-                str(e) + " Returning the fecthed companies.",
-                RuntimeWarning,
-            )
-            break
-
-        current_page += 1
-
-    return companies
 
 
 def extract_author_name(tag):
@@ -490,7 +344,7 @@ def extract_content(tag):
     return content
 
 
-def get_review_info(tag):
+def extract_review_info(tag):
     """Extract the review's data"""
     return {
         "author_name": extract_author_name(tag),
@@ -499,60 +353,3 @@ def get_review_info(tag):
         "date": extract_date(tag),
         "content": extract_content(tag),
     }
-
-
-def extract_reviews(source, nreviews):
-    """
-    Extract the reviews' data included in a company's Trustpilot page.
-
-    The number of extracted reviews is the minimum of `nreviews` and
-    the sum of the number of reviews in each page.
-
-    If the source is a static local HTML page, then just that page
-    is analyzed.
-
-    :param source: URL or path to file from where the data is extracted. If
-           it is an URL, then it must be the company's URL on Trustpilot,
-           which is like `` https://www.trustpilot.com/review/example-comp``.
-    :type source: str or path-like object
-    :param nreviews: Number of reviews to be extracted.
-    :type nreviews: int
-    :return: List of each review's data.
-    :rtype: list[dict(str,]
-    """
-
-    only_reviews = SoupStrainer(class_=REVIEW_CLASS)
-
-    if os.path.isfile(source):
-        with open(source) as f:
-            parsed_page = parse_page(f)
-
-        max_npages = 1
-
-    else:
-        req = construct_request(source)
-        parsed_page = tp_open_url(source)
-        max_npages = get_npages(parsed_page)
-
-    review_tags = parsed_page.find_all(class_=REVIEW_CLASS, limit=nreviews)
-    reviews = [get_review_info(tag) for tag in review_tags]
-    current_page = 2
-
-    while current_page <= max_npages and len(reviews) < nreviews:
-
-        try:
-            parsed_page = tp_open_url(utils.get_company_url_paged(source, current_page))
-        except RuntimeError as e:
-            warnings.warn(
-                str(e) + " Returning the fecthed the reviews.",
-                RuntimeWarning,
-            )
-            break
-
-        review_tags = parsed_page.find_all(
-            class_=REVIEW_CLASS, limit=nreviews - len(reviews)
-        )
-        reviews.extend([get_review_info(tag) for tag in review_tags])
-        current_page += 1
-
-    return reviews
