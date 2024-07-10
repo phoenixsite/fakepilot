@@ -7,10 +7,11 @@ name = "fakepilot"
 description = "Scrapping tool for Trustpilot"
 readme.content-type = "text/markdown"
 readme.file = "README.md"
-license = "MIT"
+license = {text = "MIT License"}
 authors = [
   { name = "Carlos Romero Cruz", email = "phoenixsitegit@outlook.com" },
 ]
+keywords = ["trustpilot", "scrapping", "beautifulsoup"]
 requires-python = ">=3.9"
 dynamic = ["version"]
 classifiers = [
@@ -19,6 +20,7 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "License :: MIT License",
 ]
 dependencies = [
   "beautifulsoup4>=4.12.3",
@@ -30,8 +32,10 @@ optional-dependencies.docs = [
 optional-dependencies.testing = [
   "pytest>=8.2.2",
 ]
-urls.Source = "https://github.com/phoenixsite/fakepilot"
-urls.Tracker = "https://github.com/phoenixsite/fakepilot/issues"
+
+[project.urls]
+Repository = "https://github.com/phoenixsite/fakepilot"
+Issues = "https://github.com/phoenixsite/fakepilot/issues"
 
 [tool.setuptools.dynamic]
 version = {attr = "fakepilot.__version__"}
