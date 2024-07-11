@@ -2,6 +2,8 @@
 This module defines how the data is scrapped from the Trustpilot site.
 """
 
+import sys
+
 import re
 from datetime import datetime
 from urllib.parse import parse_qs, urlparse
@@ -276,6 +278,16 @@ def extract_author_name(tag):
     return consumer_node.string.title()
 
 
+def remove_prefix(text, prefix):
+
+    if sys.version_info[:2] <= (3, 8):
+        if text.startswith(prefix):
+            return text[len(prefix):]
+        return text
+    else:
+        return text.removeprefix(prefix)
+        
+
 def extract_author_id(tag):
     """Extract the review's author id."""
     consumer_node = tag.find(attrs={"data-consumer-profile-link": "true"})
@@ -286,7 +298,7 @@ def extract_author_id(tag):
             present."""
         )
 
-    return consumer_node.get("href").removeprefix("/users/")
+    return remove_prefix(consumer_node.get("href"), "/users/")
 
 
 def extract_rating(tag):
