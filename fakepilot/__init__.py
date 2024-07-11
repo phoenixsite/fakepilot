@@ -2,4 +2,4 @@
 
 from .site import search, get_company
 
-__version__ = "0.0.2"
+__version__ = "0.0.3"
