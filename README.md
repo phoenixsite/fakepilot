@@ -79,6 +79,8 @@ fp.get_company("my_file.html", True, 10)
 ```
 
 ## Documentation
+[![Documentation status](https://readthedocs.org/projects/fakepilot/badge/?version=latest)](https://fakepilot.readthedocs.io/en/latest/)
+
 For a detail description of all the options you can visit the [fakepilot's
 official documentation site](https://fakepilot.readthedocs.io/)
 or you can build yourself

@@ -313,9 +313,7 @@ def search(
 
         try:
             for tag in result_tags:
-                company, company_page = analyse_result_tag(
-                    tag, with_reviews, nreviews, country
-                )
+                company, company_page = analyse_result_tag(tag, country)
                 if with_reviews:
                     company["nreviews"] = get_reviews(
                         company_page, False, nreviews, company["tp_url"]
