@@ -11,7 +11,7 @@ authors = [
   { name = "Carlos Romero Cruz", email = "phoenixsitegit@outlook.com" },
 ]
 keywords = ["trustpilot", "scrapping", "beautifulsoup"]
-requires-python = ">=3.8"
+requires-python = ">=3.7"
 dynamic = ["version"]
 classifiers = [
   "Programming Language :: Python :: 3 :: Only",
