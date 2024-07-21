@@ -6,6 +6,7 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 
 from fakepilot import _xray as xray
+from fakepilot.site import get_reviews
 
 PARSER = "lxml"
 BASE_DIR = Path(__file__).resolve().parent
@@ -16,44 +17,24 @@ class TestXray(unittest.TestCase):
 
         data_dir = os.path.join(BASE_DIR, "data")
 
-        self.sources = [
-            "beautytheshop.com.txt",
-            "www.granada.no.txt",
-            "djmania.es.txt",
-            "www.burgerking.dk.txt",
-            "burgerking.no.txt",
-            "www.burgerking.fr.txt",
-            "twenix.es.txt",
-            "elejidoshopping.es.txt",
-        ]
-
-        self.sources = [os.path.join(data_dir, source) for source in self.sources]
-
         # Data of 2023-12-28
-        self.solutions = {
-            "names": [
-                "BeautyTheShop",
-                "Granada AS",
-                "DJMania.es",
-                "Burger King",
-                "Burger King",
-                "BURGER KING FRANCE",
-                "Twenix",
-                "elejidoshopping",
-            ],
-            "rating_stats": [
-                (2989, 4.4),
-                (1, 3.7),
-                (52, 2.3),
-                (3205, 1.9),
-                (99, 2.3),
-                (775, 3.1),
-                (85, 4.4),
-                (21, 2.5),
-            ],
-            "categories": [
-                ["Cosmetics and Perfumes Supplier", "Cosmetics Store", "Perfume Store"],
-                [
+
+        self.data = {
+            "beautytheshop.com.txt": {
+                "name": "BeautyTheShop",
+                "rating_stats": (2989, 4.4),
+                "categories": [
+                    "Cosmetics and Perfumes Supplier",
+                    "Cosmetics Store",
+                    "Perfume Store",
+                ],
+                "npages": 141,
+                "nreviews": 20,
+            },
+            "www.granada.no.txt": {
+                "name": "Granada AS",
+                "rating_stats": (1, 3.7),
+                "categories": [
                     "Business Administration Service",
                     "e-Commerce Service",
                     "Logistics Service",
@@ -61,14 +42,63 @@ class TestXray(unittest.TestCase):
                     "Translator",
                     "Warehouse",
                 ],
-                ["e-Commerce Service"],
-                ["Restaurant"],
-                None,
-                ["Restaurants & Bars"],
-                ["Educational Institution"],
-                None,
-            ],
-            "npages": [141, 1, 3, 156, 5, 38, 4, 2],
+                "npages": 1,
+                "nreviews": 1,
+            },
+            "djmania.es.txt": {
+                "name": "DJMania.es",
+                "rating_stats": (52, 2.3),
+                "categories": [
+                    "e-Commerce Service",
+                ],
+                "npages": 3,
+                "nreviews": 20,
+            },
+            "www.burgerking.dk.txt": {
+                "name": "Burger King",
+                "rating_stats": (3205, 1.9),
+                "categories": [
+                    "Restaurant",
+                ],
+                "npages": 156,
+                "nreviews": 20,
+            },
+            "burgerking.no.txt": {
+                "name": "Burger King",
+                "rating_stats": (99, 2.3),
+                "categories": [
+                    None,
+                ],
+                "npages": 5,
+                "nreviews": 20,
+            },
+            "www.burgerking.fr.txt": {
+                "name": "BURGER KING FRANCE",
+                "rating_stats": (775, 3.1),
+                "categories": [
+                    "Restaurants & Bars",
+                ],
+                "npages": 38,
+                "nreviews": 20,
+            },
+            "twenix.es.txt": {
+                "name": "Twenix",
+                "rating_stats": (85, 4.4),
+                "categories": [
+                    "Educational Institution",
+                ],
+                "npages": 4,
+                "nreviews": 20,
+            },
+            "elejidoshopping.es.txt": {
+                "name": "elejidoshopping",
+                "rating_stats": (21, 2.5),
+                "categories": [
+                    None,
+                ],
+                "npages": 2,
+                "nreviews": 20,
+            },
         }
 
         # Dummy search_data. Because the tests pages are not
@@ -78,35 +108,37 @@ class TestXray(unittest.TestCase):
         dummy_score = 2.5
         dummy_nreviews = 21
 
-        self.companies = []
-        self.parsed_pages = []
+        self.companies = {}
 
-        for source in self.sources:
-            with open(source, encoding="utf-8") as f:
+        for id in self.data:
+            source = os.path.join(data_dir, id)
+            with open(source, encoding="utf8") as f:
                 parsed_page = xray.parse_page(f, None)
-                self.parsed_pages.append(parsed_page)
                 company = xray.extract_company_info(parsed_page)
 
                 if not (company["score"] and company["nreviews"]):
                     company["score"] = dummy_score
                     company["nreviews"] = dummy_nreviews
 
-                self.companies.append(company)
+                # Number of reviews set to 100 to extract all of them
+                company["parsed_page"] = parsed_page
+                company["reviews"] = get_reviews(parsed_page, True, 100, None)
+                self.companies[id] = company
 
     def test_extract_name(self):
         """Test that the name is correctly extracted"""
-        for i, r in enumerate(self.companies):
-            name = r["name"]
-            with self.subTest(source=self.sources[i]):
-                self.assertEqual(name, self.solutions["names"][i])
+        for id in self.companies:
+            name = self.companies[id]["name"]
+            with self.subTest(source=id):
+                self.assertEqual(name, self.data[id]["name"])
 
     def test_extract_rating_stats(self):
         """Test that the number of reviews and score are correctly extracted"""
-        for i, r in enumerate(self.companies):
-            nreviews = r["nreviews"]
-            score = r["score"]
-            with self.subTest(source=self.sources[i]):
-                self.assertEqual((nreviews, score), self.solutions["rating_stats"][i])
+        for id in self.companies:
+            nreviews = self.companies[id]["nreviews"]
+            score = self.companies[id]["score"]
+            with self.subTest(source=id):
+                self.assertEqual((nreviews, score), self.data[id]["rating_stats"])
 
     def test_extract_categories(self):
         """
@@ -114,17 +146,25 @@ class TestXray(unittest.TestCase):
         for some example companies.
         """
 
-        for i, r in enumerate(self.companies):
-            categories = r["categories"]
-            with self.subTest(source=self.sources[i]):
-                self.assertEqual(categories, self.solutions["categories"][i])
+        for id in self.companies:
+            categories = self.companies[id]["categories"]
+
+            if not categories:
+                categories = [None]
+
+            with self.subTest(source=id):
+                self.assertEqual(categories, self.data[id]["categories"])
 
     def test_getnpages(self):
-        """
-        Test that the number of pages extracted is correct.
-        """
+        """Test the extracted number of pages"""
+        for id in self.companies:
+            npages = xray.get_npages(self.companies[id]["parsed_page"])
+            with self.subTest(source=id):
+                self.assertEqual(npages, self.data[id]["npages"])
 
-        for i, r in enumerate(self.parsed_pages):
-            npages = xray.get_npages(r)
-            with self.subTest(source=self.sources[i]):
-                self.assertEqual(npages, self.solutions["npages"][i])
+    def test_nreviews(self):
+        """Test the number of reviews extracted."""
+        for id in self.companies:
+            n_extracted_reviews = len(self.companies[id]["reviews"])
+            with self.subTest(source=id):
+                self.assertEqual(n_extracted_reviews, self.data[id]["nreviews"])

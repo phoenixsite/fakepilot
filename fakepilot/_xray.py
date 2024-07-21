@@ -282,11 +282,11 @@ def remove_prefix(text, prefix):
 
     if sys.version_info[:2] <= (3, 8):
         if text.startswith(prefix):
-            return text[len(prefix):]
+            return text[len(prefix) :]
         return text
     else:
         return text.removeprefix(prefix)
-        
+
 
 def extract_author_id(tag):
     """Extract the review's author id."""
@@ -344,11 +344,11 @@ def extract_content(tag):
             )
 
     if content_node.string:
-        content = content_node.string.encode()
+        content = str(content_node.string)
     else:
-        content = bytes()
+        content = ""
         for string in content_node.strings:
-            content += string.encode()
+            content += str(string)
 
     return content
 
