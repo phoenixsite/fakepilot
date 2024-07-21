@@ -3,7 +3,7 @@ from datetime import datetime
 project = "Fakepilot"
 copyright = f"{datetime.now().year}, Carlos Romero Cruz"
 author = "Carlos Romero Cruz"
-version = "0.0.1"
+version = "0.0.3"
 release = version
 
 import os
