@@ -282,7 +282,7 @@ def remove_prefix(text, prefix):
 
     if sys.version_info[:2] <= (3, 8):
         if text.startswith(prefix):
-            return text[len(prefix) :]
+            return text[len(prefix):]
         return text
     else:
         return text.removeprefix(prefix)
