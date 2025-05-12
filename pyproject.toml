@@ -41,7 +41,7 @@ Issues = "https://github.com/phoenixsite/fakepilot/issues"
 target-version = ["py39", "py310", "py311", "py312", "py313"]
 
 [tool.coverage.paths]
-source = ["src"]
+source = ["src", ".tox/3.*/**/site-packages/"]
 
 [tool.coverage.report]
 exclude_lines = [
