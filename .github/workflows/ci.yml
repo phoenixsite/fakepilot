@@ -58,7 +58,7 @@ jobs:
           python -Im pip install --upgrade tox
           python -Im tox --version
       - name: Run tests
-        run: "python -Im tox run -m tests"
+        run: "python -Im tox run -e ${{ matrix.python-version }}"
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
         with:
@@ -85,7 +85,7 @@ jobs:
           pattern: coverage-data-*
           merge-multiple: true
 
-      - name: Combine coverage & fail under 100%
+      - name: Combine coverage & fail under 90%
         run: |
           python -Im pip install --upgrade "coverage[toml]"
 

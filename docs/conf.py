@@ -37,7 +37,6 @@ intersphinx_mapping = {
 }
 
 html_theme = "furo"
-html_static_path = ["_static"]
 
 # Spelling check needs an additional module that is not installed by default.
 # Add it only if spelling check is requested so docs can be generated without
