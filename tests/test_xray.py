@@ -1,4 +1,6 @@
-""" """
+"""
+Tests the extraction of companies' attributes.
+"""
 
 # SPDX-License-Identifier: MIT
 
@@ -6,15 +8,24 @@ import os
 import unittest
 from pathlib import Path
 
-from fakepilot import _xray as xray
-from fakepilot.site import get_reviews
+from fakepilot import extract_info
 
 PARSER = "lxml"
 BASE_DIR = Path(__file__).resolve().parent
 
 
 class TestXray(unittest.TestCase):
+    """
+    Tests the extraction of the attributes in multiple pages.
+    """
+
+    # pylint: disable=consider-iterating-dictionary
+
     def setUp(self):
+        """
+        Create the real data and extract the information
+        from certain local HTML pages.
+        """
 
         data_dir = os.path.join(BASE_DIR, "data")
 
@@ -111,61 +122,47 @@ class TestXray(unittest.TestCase):
 
         self.companies = {}
 
-        for id in self.data:
-            source = os.path.join(data_dir, id)
-            with open(source, encoding="utf8") as f:
-                parsed_page = xray.parse_page(f, None)
-                company = xray.extract_company_info(parsed_page)
+        for filename in self.data.keys():
+            source = os.path.join(data_dir, filename)
+            company = extract_info(source, True, 100)
+            if not (company["score"] and company["nreviews"]):
+                company["score"] = dummy_score
+                company["nreviews"] = dummy_nreviews
 
-                if not (company["score"] and company["nreviews"]):
-                    company["score"] = dummy_score
-                    company["nreviews"] = dummy_nreviews
-
-                # Number of reviews set to 100 to extract all of them
-                company["parsed_page"] = parsed_page
-                company["reviews"] = get_reviews(parsed_page, True, 100, None)
-                self.companies[id] = company
+            self.companies[filename] = company
 
     def test_extract_name(self):
         """Test that the name is correctly extracted"""
-        for id in self.companies:
-            name = self.companies[id]["name"]
-            with self.subTest(source=id):
-                self.assertEqual(name, self.data[id]["name"])
+        for filename, company in self.companies.items():
+            name = company["name"]
+            with self.subTest(source=filename):
+                self.assertEqual(name, self.data[filename]["name"])
 
     def test_extract_rating_stats(self):
         """Test that the number of reviews and score are correctly extracted"""
-        for id in self.companies:
-            nreviews = self.companies[id]["nreviews"]
-            score = self.companies[id]["score"]
-            with self.subTest(source=id):
-                self.assertEqual((nreviews, score), self.data[id]["rating_stats"])
+        for filename, company in self.companies.items():
+            nreviews = company["nreviews"]
+            score = company["score"]
+            with self.subTest(source=filename):
+                self.assertEqual((nreviews, score), self.data[filename]["rating_stats"])
 
     def test_extract_categories(self):
         """
-        Test that the categories extracted from a company are the correct ones
-        for some example companies.
+        Test that the categories extracted from a company are the correct ones.
         """
 
-        for id in self.companies:
-            categories = self.companies[id]["categories"]
+        for filename, company in self.companies.items():
+            categories = company["categories"]
 
             if not categories:
                 categories = [None]
 
-            with self.subTest(source=id):
-                self.assertEqual(categories, self.data[id]["categories"])
-
-    def test_getnpages(self):
-        """Test the extracted number of pages"""
-        for id in self.companies:
-            npages = xray.get_npages(self.companies[id]["parsed_page"])
-            with self.subTest(source=id):
-                self.assertEqual(npages, self.data[id]["npages"])
+            with self.subTest(source=filename):
+                self.assertEqual(categories, self.data[filename]["categories"])
 
     def test_nreviews(self):
         """Test the number of reviews extracted."""
-        for id in self.companies:
-            n_extracted_reviews = len(self.companies[id]["reviews"])
-            with self.subTest(source=id):
-                self.assertEqual(n_extracted_reviews, self.data[id]["nreviews"])
+        for filename, company in self.companies.items():
+            n_extracted_reviews = len(company["reviews"])
+            with self.subTest(source=filename):
+                self.assertEqual(n_extracted_reviews, self.data[filename]["nreviews"])

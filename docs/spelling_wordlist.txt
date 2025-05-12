@@ -1,2 +1,6 @@
 Trustpilot
 Utils
+Fakepilot
+Trustscore
+Changelog
+changelog

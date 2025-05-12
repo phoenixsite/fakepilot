@@ -5,7 +5,6 @@ Fakepilot's documentation
 <https://www.trustpilot.com/>`_.
 
 .. toctree::
-   :hidden:
    :maxdepth: 2
 
    api
@@ -14,5 +13,5 @@ Fakepilot's documentation
 Main functionality
 ------------------
 
-.. autofunction:: fakepilot.search
-.. autofunction:: fakepilot.get_company
+.. autofunction:: fakepilot.extract_info
+.. autofunction:: fakepilot.get_reviews

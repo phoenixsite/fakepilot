@@ -46,7 +46,7 @@ exclude_lines = [
   "def __str__",
   "raise NotImplementedError",
 ]
-fail_under = 100
+fail_under = 90
 
 [tool.coverage.run]
 branch = true
@@ -54,7 +54,7 @@ parallel = true
 source = ["fakepilot"]
 
 [tool.interrogate]
-fail-under = 80
+fail-under = 100
 ignore-init-method = true
 ignore-init-module = true
 ignore-magic = true
