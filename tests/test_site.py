@@ -1,7 +1,10 @@
-import unittest
-from functools import reduce
+""" """
 
-from fakepilot import search, get_company
+# SPDX-License-Identifier: MIT
+
+import unittest
+
+from fakepilot import get_company, search
 
 
 class TestSite(unittest.TestCase):

@@ -1,1 +1,6 @@
-bs4
+furo
+sphinx
+sphinx-copybutton
+sphinx-inline-tabs
+sphinx-notfound-page
+sphinxext-opengraph

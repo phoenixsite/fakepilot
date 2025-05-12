@@ -1,9 +1,10 @@
+""" """
+
+# SPDX-License-Identifier: MIT
+
 import os
 import unittest
-import urllib.request as request
 from pathlib import Path
-
-from bs4 import BeautifulSoup
 
 from fakepilot import _xray as xray
 from fakepilot.site import get_reviews

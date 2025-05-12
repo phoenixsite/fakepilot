@@ -1,0 +1,8 @@
+include MANIFEST.in
+include .editorconfig
+include README.md
+include .readthedocs.yaml
+include .pre-commit-config.yaml
+include tox.ini
+recursive-include docs *.rst *.py make.bat Makefile *.txt
+recursive-include tests *.py *.txt

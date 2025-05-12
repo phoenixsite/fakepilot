@@ -9,6 +9,7 @@ Fakepilot's documentation
    :maxdepth: 2
 
    api
+   changelog
 
 Main functionality
 ------------------

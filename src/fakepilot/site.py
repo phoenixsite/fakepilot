@@ -1,14 +1,16 @@
+""" """
+
+# SPDX-License-Identifier: MIT
+
 import os
-import re
-
 import warnings
-
-from bs4 import SoupStrainer
 from urllib import request
 from urllib.error import HTTPError
 
+from bs4 import SoupStrainer
 
-from . import _xray as xray, utils
+from . import _xray as xray
+from . import utils
 
 
 def tp_open_url(url, only_class=None):
@@ -30,28 +32,26 @@ def tp_open_url(url, only_class=None):
     req = utils.construct_request(url)
     try:
         with request.urlopen(req) as r:
-            parsed_page = xray.parse_page(r, only_class)
+            return xray.parse_page(r, only_class)
     except HTTPError as e:
         if e.code == 403:
             raise RuntimeError(
-                "Forbidden access to Trustpilot. You've made too many " "requests."
+                "Forbidden access to Trustpilot. You've made too many requests."
             ) from e
 
         raise e
-
-    return parsed_page
 
 
 def analyse_result_tag(tag, country):
     """
     Analyse a result tag from the Trustpilot's search page and extract
-    the information of the company the tag refers to.
+    the information of the company refered by the tag.
 
-    Return the parsed page if the reviews are required to be
+    Return the parsed page just in case the reviews are required to be
     extracted in following calls.
 
     :param tag: Result tag from the search page.
-    :type tag: :class:`bs4.Tag`
+    :type tag:
     :param country: Trustpilot's country to search on.
     :type country: str
     :return: Company's data and corresponding parsed HTML.
@@ -59,7 +59,7 @@ def analyse_result_tag(tag, country):
     """
 
     # Obtain the company's URL in Trustpilot
-    company_url = tag.find(href=re.compile("/review/")).get("href")
+    company_url = tag.xpath('../a[contains(@href, "/review/"').get("href")
     tp_comp_url = utils.get_tp_company_url(company_url, country)
 
     company_page = tp_open_url(tp_comp_url)
@@ -263,12 +263,14 @@ def search(
 
     parsed_page = tp_open_url(utils.get_search_url(country, query))
     max_npages = xray.get_npages(parsed_page)
-    result_tags = parsed_page.find_all(class_=xray.BUSINESS_CLASS, limit=ncompanies)
+    result_tags = parsed_page.xpath(
+        './/div[starts-with(@class, "styles_reviewCardInner"]'
+    )[:ncompanies]
 
-    if required_attrs:
-        result_tags = [
-            tag for tag in result_tags if xray.has_attrs(tag, required_attrs)
-        ]
+    # if required_attrs:
+    #    result_tags = [
+    #        tag for tag in result_tags if xray.has_attrs(tag, required_attrs)
+    #    ]
 
     companies = []
     try:

@@ -3,9 +3,10 @@ This module includes constants and functions that support the main
 functionality of fakepilot.
 """
 
-from urllib.parse import urlencode
-from urllib import request
+# SPDX-License-Identifier: MIT
 
+from urllib import request
+from urllib.parse import urlencode
 
 HTTP_PROT = "https"
 BASE_URL = "trustpilot.com"

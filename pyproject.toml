@@ -1,41 +1,72 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "fakepilot"
 description = "Scrapping tool for Trustpilot"
+version = "25.05.0"
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
 authors = [
   { name = "Carlos Romero Cruz", email = "phoenixsitegit@outlook.com" },
 ]
 keywords = ["trustpilot", "scrapping", "beautifulsoup"]
 requires-python = ">=3.7"
-dynamic = ["version"]
 classifiers = [
-  "Programming Language :: Python :: 3 :: Only",
+  "Development Status :: 5 - Production/Stable",
+  "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
-  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
-  "beautifulsoup4>=4.12.3",
-  "lxml>=5.2.2",
+  "beautifulsoup4 >= 4.12",
+  "lxml",
 ]
-optional-dependencies.docs = [
-  "sphinx>=7.3.7",
-]
-optional-dependencies.testing = [
-  "pytest>=8.2.2",
-  "coverage>=7.5.4",
-]
+
+[project.optional-dependencies]
+lxml = ["lxml"]
+
+[dependency-groups]
+tests = ["tox"]
 
 [project.urls]
 Repository = "https://github.com/phoenixsite/fakepilot"
 Issues = "https://github.com/phoenixsite/fakepilot/issues"
 
-[tool.setuptools.dynamic]
-version = {attr = "fakepilot.__version__"}
+[tool.black]
+target-version = ["py39", "py310", "py311", "py312", "py313"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "def __str__",
+  "raise NotImplementedError",
+]
+fail_under = 100
+
+[tool.coverage.run]
+branch = true
+parallel = true
+source = ["fakepilot"]
+
+[tool.interrogate]
+fail-under = 80
+ignore-init-method = true
+ignore-init-module = true
+ignore-magic = true
+
+[tool.isort]
+profile = "black"
+
+[tool.pylint]
+disable = [
+  "duplicate-code",
+  "logging-fstring-interpolation",
+  "missing-class-docstring",
+  "missing-module-docstring",
+  "too-many-ancestors",
+]

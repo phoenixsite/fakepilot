@@ -1,0 +1,42 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+exclude: '\w*\.txt'
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+    -   id: trailing-whitespace
+    -   id: end-of-file-fixer
+    -   id: check-yaml
+    -   id: check-ast
+    -   id: check-added-large-files
+    -   id: check-case-conflict
+    -   id: check-docstring-first
+    -   id: check-illegal-windows-names
+    -   id: check-merge-conflict
+    -   id: check-toml
+    -   id: check-yaml
+    -   id: debug-statements
+    -   id: fix-byte-order-marker
+- repo: https://github.com/psf/black
+  rev: 24.10.0
+  hooks:
+    - id: black
+      language_version: python3.13
+      name: black (Python formatter)
+- repo: https://github.com/pycqa/flake8
+  rev: 7.1.1
+  hooks:
+    - id: flake8
+      name: flake8 (Python linter)
+- repo: https://github.com/econchick/interrogate
+  rev: 1.7.0
+  hooks:
+    - id: interrogate
+      name: interrogate (Python docstring enforcer)
+      args: [--verbose]
+- repo: https://github.com/pycqa/isort
+  rev: 5.13.2
+  hooks:
+    - id: isort
+      name: isort (Python formatter)

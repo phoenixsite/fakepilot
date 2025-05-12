@@ -1,12 +1,12 @@
 """
-This module defines how the data is scrapped from the Trustpilot site.
+Defines how the data is scrapped from the Trustpilot site.
 """
 
-import sys
+# SPDX-License-Identifier: MIT
 
 import re
+import sys
 from datetime import datetime
-from urllib.parse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup
 
@@ -66,7 +66,7 @@ def has_attrs(tag, attrs):
         icon = tag.find("path", d=d_attrs[attr])
 
         if not icon:
-            include_all = False
+            return False
 
     return include_all
 
@@ -191,34 +191,17 @@ def get_npages(tag):
     :rtype: int
     """
 
-    npage_button_section = tag.find("nav", class_=re.compile("pagination_pagination"))
-
-    if not npage_button_section:
+    try:
+        last_page_button = tag.xpath(
+            './/nav[starts-with(@class, "pagination_pagination")]/a/span'
+        )[-2]
+    except IndexError:
         raise ValueError(
             """The HTML section where the number of pages is not
                          present."""
         )
 
-    # The last page button has a specific name if there are more than three
-    # pages.
-    last_page_button = npage_button_section.find(
-        attrs={"name": "pagination-button-last"}
-    )
-
-    # If there are less than three pages, then the last page button
-    # doesn't have any specific attribute, so the last button is chosen.
-    if not last_page_button:
-        last_page_button = npage_button_section.contents[-2]
-
-    # If the last button attribute href does
-    # not have a query parameter named 'page', it means there is only
-    # one page
-    try:
-        npages = int(parse_qs(urlparse(last_page_button["href"]).query)["page"][0])
-    except KeyError:
-        npages = 1
-
-    return npages
+    return int(last_page_button.text)
 
 
 def parse_page(page, only_class):
@@ -230,8 +213,6 @@ def parse_page(page, only_class):
 
     :param page: HTML document to be parsed.
     :type page: str
-    :param only_class: Type of tags to be analysed.
-    :type only_class: :class:`bs4.SoupStrainer`
     :return: Parsed page with BeautifulSoup class.
     :rtype: :class:`bs4.BeautifulSoup`
     """
@@ -282,7 +263,7 @@ def remove_prefix(text, prefix):
 
     if sys.version_info[:2] <= (3, 8):
         if text.startswith(prefix):
-            return text[len(prefix):]
+            return text[len(prefix) :]
         return text
     else:
         return text.removeprefix(prefix)
