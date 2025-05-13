@@ -25,7 +25,21 @@ def get_reviews(company_page, nreviews):
     :rtype: list(dict(str,))
     """
 
-    review_tags = company_page.find_all(class_=REVIEW_CLASS, limit=nreviews)
+    def has_attr_data_service_review_card_paper(tag):
+        """
+        Check if ``tag`` has the attribute ``'data-service-review-card-paper'``.
+        """
+        return tag.has_attr("data-service-review-card-paper")
+
+    reviews_section = company_page.find(class_=re.compile("styles_reviewListContainer"))
+
+    # For 2023 pages
+    if not reviews_section:
+        reviews_section = company_page
+
+    review_tags = reviews_section.find_all(
+        has_attr_data_service_review_card_paper, limit=nreviews
+    )
     reviews = [xray.extract_review_info(tag) for tag in review_tags]
     return reviews
 

@@ -27,7 +27,13 @@ def extract_url(tag):
     as it is stored in Trustpilot.
     """
 
-    business_url = tag.find(class_=re.compile("styles_websiteUrl"))
+    # For May 2025 pages
+    business_url = tag.find(class_=re.compile("link_internal"))
+
+    # For Decemeber 2023 pages
+    if not business_url:
+        business_url = tag.find(class_=re.compile("styles_websiteUrl"))
+
     return "".join(business_url.strings)
 
 
@@ -83,9 +89,18 @@ def extract_contact_info(tag):
         r"([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+"
     )
 
-    contact_elements = tag.find_all(
-        "li", class_=re.compile("styles_contactInfoElement")
-    )
+    # For May 2025 pages
+    contact_elements = tag.find_all("li", class_=re.compile("styles_itemRow"))
+
+    # For December 2023 pages
+    if not contact_elements:
+        contact_elements = tag.find_all(
+            "li", class_=re.compile("styles_contactInfoElement")
+        )
+    else:
+        # On modern pages the last element is the company's URL,
+        # so we ned to remove it from the contact element list.
+        contact_elements = contact_elements[:-1]
 
     for contact_info in contact_elements:
 
@@ -103,12 +118,17 @@ def extract_contact_info(tag):
 
 def extract_categories(tag):
     """Return the company's category list."""
-    cat_section = tag.find(class_=re.compile("styles_categoriesList"))
-    categories = None
 
-    if cat_section:
-        cat_refs = cat_section.find_all(href=re.compile("/categories/"))
-        categories = [cat_tag.string for cat_tag in cat_refs]
+    def has_attr_data_business_unit_info_category_typography(tag):
+        """
+        Check if ``tag`` has the attribute
+        ``'data-business-unit-info-category-typography'``.
+        """
+
+        return tag.has_attr("data-business-unit-info-category-typography")
+
+    cat_refs = tag.find_all(has_attr_data_business_unit_info_category_typography)
+    categories = [cat_tag.string for cat_tag in cat_refs]
 
     return categories
 
@@ -182,15 +202,17 @@ def extract_author_id(tag):
 
 def extract_rating(tag):
     """Extract the rating in the review."""
-    star_rating_node = tag.find(class_=re.compile("star-rating"))
 
-    if not star_rating_node:
-        raise ValueError(
-            """The tag where the review's rating should be isn't
-            present."""
-        )
+    def has_data_service_review_rating(inner_tag):
+        """
+        Check if the tag has the attribute ``'data-service-review-rating'``.
+        """
+        return inner_tag.has_attr("data-service-review-rating")
 
-    return float(re.search(r"[0-5]", star_rating_node.img["alt"]).group())
+    star_rating_node = tag.find(has_data_service_review_rating)
+    rating = float(star_rating_node.attrs["data-service-review-rating"])
+
+    return rating
 
 
 def extract_date(tag):

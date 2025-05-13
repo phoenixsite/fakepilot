@@ -1,0 +1,252 @@
+{
+  "beautytheshop.com.txt": {
+    "name": "BeautyTheShop",
+    "rating_stats": [
+      2989,
+      4.4
+    ],
+    "categories": [
+      "Cosmetics and Perfumes Supplier",
+      "Cosmetics Store",
+      "Perfume Store"
+    ],
+    "address": "calle albuñol nave 6 albolote,18220,granada,Spain",
+    "phone": "+34958490405",
+    "email": "info@beautytheshop.com",
+    "nreviews": 20
+  },
+  "www.granada.no.txt": {
+    "name": "Granada AS",
+    "rating_stats": [
+      1,
+      3.7
+    ],
+    "categories": [
+      "Business Administration Service",
+      "e-Commerce Service",
+      "Logistics Service",
+      "Online Marketplace",
+      "Translator",
+      "Warehouse"
+    ],
+    "address": "Norway",
+    "phone": null,
+    "email": null,
+    "nreviews": 1
+  },
+  "djmania.es.txt": {
+    "name": "DJMania.es",
+    "rating_stats": [
+      52,
+      2.3
+    ],
+    "categories": [
+      "e-Commerce Service"
+    ],
+    "address": "C/ Valladolid Nº38, Polígono San Nicolás, Ogíjares,18151,Granada,Spain",
+    "phone": "958373046",
+    "email": "info@djmania.es",
+    "nreviews": 20
+  },
+  "www.burgerking.dk.txt": {
+    "name": "Burger King",
+    "rating_stats": [
+      3205,
+      1.9
+    ],
+    "categories": [
+      "Restaurant"
+    ],
+    "address": null,
+    "phone": null,
+    "email": null,
+    "nreviews": 20
+  },
+  "burgerking.no.txt": {
+    "name": "Burger King",
+    "rating_stats": [
+      99,
+      2.3
+    ],
+    "categories": [
+      null
+    ],
+    "address": null,
+    "phone": null,
+    "email": null,
+    "nreviews": 20
+  },
+  "www.burgerking.fr.txt": {
+    "name": "BURGER KING FRANCE",
+    "rating_stats": [
+      775,
+      3.1
+    ],
+    "categories": [
+      "Restaurants & Bars"
+    ],
+    "address": "Place Victor Hugo 1,92400,Courbevoie,France",
+    "phone": null,
+    "email": null,
+    "nreviews": 20
+  },
+  "twenix.es.txt": {
+    "name": "Twenix",
+    "rating_stats": [
+      85,
+      4.4
+    ],
+    "categories": [
+      "Educational Institution"
+    ],
+    "address": "Avenida Cabo de Gata, 23,04007,Almería,Spain",
+    "phone": null,
+    "email": "marketing@twenix.es",
+    "nreviews": 20
+  },
+  "elejidoshopping.es.txt": {
+    "name": "elejidoshopping",
+    "rating_stats": [
+      21,
+      2.5
+    ],
+    "categories": [
+      null
+    ],
+    "address": null,
+    "phone": null,
+    "email": null,
+    "nreviews": 20
+  },
+  "beautytheshop.com_2025.txt": {
+    "name": "BeautyTheShop",
+    "rating_stats": [
+      3498,
+      4.3
+    ],
+    "categories": [
+      "Perfume Store",
+      "Cosmetics and Perfumes Supplier",
+      "Cosmetics Store"
+    ],
+    "address": "calle albuñol nave 6 albolote, 18220, granada, Spain",
+    "phone": "+34958490405",
+    "email": "info@beautytheshop.com",
+    "nreviews": 20
+  },
+  "www.granada.no_2025.txt": {
+    "name": "Granada AS",
+    "rating_stats": [
+      1,
+      3.7
+    ],
+    "categories": [
+      "Business Administration Service",
+      "e-Commerce Service",
+      "Logistics Service",
+      "Online Marketplace",
+      "Translator",
+      "Warehouse"
+    ],
+    "address": "Norway",
+    "phone": null,
+    "email": null,
+    "nreviews": 1
+  },
+  "djmania.es_2025.txt": {
+    "name": "DJMania",
+    "rating_stats": [
+      194,
+      3.9
+    ],
+    "categories": [
+      "DJ Supply Store",
+      "e-Commerce Service",
+      "Musical Instrument Store",
+      "Stage Lighting Equipment Supplier"
+    ],
+    "address": "Avenida de Fernando de los Ríos, 11 Portal 2, Oficina 8, 18100, Armilla, Spain",
+    "phone": "858284021",
+    "email": "info@djmania.es",
+    "nreviews": 4
+  },
+  "www.burgerking.dk_2025.txt": {
+    "name": "Burger King",
+    "rating_stats": [
+      3996,
+      2.2
+    ],
+    "categories": [
+      "Restaurant",
+      "Fast Food Restaurant",
+      "Hamburger Restaurant",
+      "Take Away Service"
+    ],
+    "address": null,
+    "email": null,
+    "phone": null,
+    "nreviews": 20
+  },
+  "burgerking.no_2025.txt": {
+    "name": "Burger King",
+    "rating_stats": [
+      333,
+      3.9
+    ],
+    "categories": [
+      "Restaurant",
+      "Fast Food Restaurant",
+      "Hamburger Restaurant",
+      "Take Away Service"
+    ],
+    "address": null,
+    "email": null,
+    "phone": null,
+    "nreviews": 19
+  },
+  "www.burgerking.fr_2025.txt": {
+    "name": "BURGER KING FRANCE",
+    "rating_stats": [
+      1484,
+      3.5
+    ],
+    "categories": [
+      "Restaurant",
+      "Fast Food Restaurant"
+    ],
+    "address": "Place Victor Hugo 1, 92400, Courbevoie, France",
+    "email": null,
+    "phone": null,
+    "nreviews": 17
+  },
+  "twenix.es_2025.txt": {
+    "name": "Twenix",
+    "rating_stats": [
+      129,
+      4.4
+    ],
+    "categories": [
+      "Educational Institution"
+    ],
+    "address": "Avenida Cabo de Gata, 23, 04007, Almería, Spain",
+    "email": "marketing@twenix.es",
+    "phone": null,
+    "nreviews": 20
+  },
+  "elejidoshopping.es_2025.txt": {
+    "name": "elejidoshopping",
+    "rating_stats": [
+      23,
+      3.0
+    ],
+    "categories": [
+      "Computer Store",
+      "Cell Phone Store",
+      "Computer and Accessories Store"
+    ],
+    "address": null,
+    "email": null,
+    "phone": null,
+    "nreviews": 1
+  }
+}
