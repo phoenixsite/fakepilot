@@ -1,6 +1,6 @@
 # Fakepilot
 
-[![CI](https://github.com/phoenixsite/fakepilot/actions/workflows/ci.yml/badge.svg)](https://github.com/phoenixsite/fakepilot/actions/workflows/python-app.yml)
+[![CI](https://github.com/phoenixsite/fakepilot/actions/workflows/ci.yml/badge.svg)](https://github.com/phoenixsite/fakepilot/actions?query=workflow%3ACI)
 
 
 [Trustpilot](https://www.trustpilot.com/) scrapping Python package.
