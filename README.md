@@ -1,5 +1,3 @@
-# Fakepilot
-
 [![CI](https://github.com/phoenixsite/fakepilot/actions/workflows/ci.yml/badge.svg)](https://github.com/phoenixsite/fakepilot/actions?query=workflow%3ACI)
 
 

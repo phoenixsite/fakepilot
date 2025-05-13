@@ -6,8 +6,6 @@ import re
 
 from . import xray
 
-REVIEW_CLASS = re.compile("styles_reviewCardInner")
-
 
 def get_reviews(company_page, nreviews):
     """
@@ -56,7 +54,17 @@ def extract_info(source, with_reviews=False, nreviews=5):
     :param nreviews: Number of reviews to be extracted. Ignored if `with_reviews`
            is ``False``.
     :type nreviews: int, optional
-    :return: Company's information
+    :return: Company's information: name (``'name'``), URL (``'url'``),
+            number of reviews in Trustpilot (``'nreviews'``),
+            and score (``'address'``). The categories, email (``'email'``),
+            phone number (``'phone'``) and address (``'address'``) are
+            also included if they are on the page. In case of the reviews,
+            which are included under the key ``'reviews'``, for each
+            one the returned values are the author's name (``'author_name'``),
+            the author's id (``'author_id'``)
+            in Trustpilot, rating (``'star_rating'``),
+            date of publication (``'date'``) and the text content
+            (``'content'``).
     :rtype: dict(str, )
     """
 
