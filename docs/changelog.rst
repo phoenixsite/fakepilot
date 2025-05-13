@@ -7,6 +7,15 @@ Changelog
 This document presents the changes made between releases
 of ``fakepilot``.
 
+Version 25.05.1
+~~~~~~~~~~~~~~~
+
+Released May 2025
+
+* Added support for Trustpilot pages as of May 2025. The previous
+  version only supports those from December 2023.
+
+
 Version 25.05.0
 ~~~~~~~~~~~~~~~
 
