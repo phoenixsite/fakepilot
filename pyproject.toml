@@ -12,7 +12,7 @@ authors = [
   { name = "Carlos Romero Cruz", email = "phoenixsitegit@outlook.com" },
 ]
 keywords = ["trustpilot", "scrapping", "beautifulsoup"]
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Programming Language :: Python :: 3",
@@ -36,6 +36,7 @@ tests = ["tox"]
 [project.urls]
 Repository = "https://github.com/phoenixsite/fakepilot"
 Issues = "https://github.com/phoenixsite/fakepilot/issues"
+Documentation = "https://fakepilot.readthedocs.io/"
 
 [tool.black]
 target-version = ["py39", "py310", "py311", "py312", "py313"]

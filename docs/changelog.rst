@@ -10,7 +10,7 @@ of ``fakepilot``.
 Version 25.05.0
 ~~~~~~~~~~~~~~~
 
-Released April 2025
+Released May 2025
 
 * Adopted "CalVer" YYYY.MM.MINOR.
 

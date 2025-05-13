@@ -14,7 +14,7 @@ Features
 * Obtain its reviews with a fine-grained detail.
 * The output data is structured in a simple dictionary.
 
-IMPORTANT: fakepilot now doesn't fetch the web pages from Trustpilot. This must be done by the user of the package.
+IMPORTANT: ``fakepilot`` now doesn't fetch the web pages from Trustpilot. This must be done by the user of the package.
 
 Documentation contents
 ----------------------
