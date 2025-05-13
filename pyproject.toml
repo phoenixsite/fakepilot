@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "fakepilot"
 description = "Scrapping tool for Trustpilot"
-version = "25.05.0"
+version = "25.05.1"
 readme = "README.md"
 license = "MIT"
 authors = [
