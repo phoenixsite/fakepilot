@@ -4,3 +4,4 @@ Fakepilot
 Trustscore
 Changelog
 changelog
+lxml

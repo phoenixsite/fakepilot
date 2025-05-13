@@ -24,7 +24,6 @@ classifiers = [
 ]
 dependencies = [
   "beautifulsoup4 >= 4.12",
-  "lxml",
 ]
 
 [project.optional-dependencies]

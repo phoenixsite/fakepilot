@@ -9,12 +9,12 @@ from datetime import datetime
 
 from bs4 import BeautifulSoup
 
-PARSER = "lxml"
-REVIEW_CLASS = re.compile("styles_reviewCardInner")
-BUSINESS_CLASS = re.compile("businessUnitResult")
+try:
+    import lxml  # pylint: disable=unused-import
 
-# Used to speed up the BeautifulSoup detection of the markup encoding
-TPENCODING = "utf-8"
+    PARSER = "lxml"
+except ImportError:
+    PARSER = "html.parser"
 
 
 def extract_url(tag):
@@ -113,12 +113,12 @@ def extract_categories(tag):
     return categories
 
 
-def parse_page(page, only_class):
+def parse_page(page):
     """
     Parse page with BeautifulSoup.
 
-    Set the lxml's parser and the parse_only parameter of
-    the BeautifulSoup constructor, if passed.
+    Set the ``lxml``'s parser if it is installed. If not,
+    the ``html.parser`` is used.
 
     :param page: HTML document to be parsed.
     :type page: str
@@ -129,8 +129,7 @@ def parse_page(page, only_class):
     return BeautifulSoup(
         page,
         PARSER,
-        from_encoding=TPENCODING,
-        parse_only=only_class,
+        from_encoding="utf-8",
     )
 
 

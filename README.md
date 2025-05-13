@@ -10,7 +10,23 @@ Extract online business reviews and integrate it on your code.
 It is based on [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/).
 
 ## Features
-* Extraction of fine-grained data from business reviews.
+* Extract the information of a company from a Trustpilot page.
+* Obtain its reviews with a fine-grained detail.
+* The output data is structured in a simple dictionary.
+
+IMPORTANT: fakepilot now doesn't fetch the web pages from Trustpilot. This must be done by the user of the package.
+
+## Usage
+
+The main function is ``extract_info``. You can pass a file containing a Trustpilot HTML page of a company and it returns information, like number
+of reviews, phone number or address. Also, you can specify if you want
+some of the company's reviews to be extracted.
+
+```python
+import fakepilot as fp
+fp.extract_info("tests/data/burgerking.no.html")
+fp.extract_info("tests/data/burgerking.no.html", with_reviews=True, 2)
+```
 
 ## Installation
 
@@ -36,7 +52,7 @@ pip install .
 ## Documentation
 
 For a detail description of all the options you can visit the [fakepilot's
-official documentation site](https://fakepilot.readthedocs.io/)
+documentation](https://fakepilot.readthedocs.io/)
 or you can build yourself
 in ``docs`` with [Sphinx](https://www.sphinx-doc.org/en/master/):
 

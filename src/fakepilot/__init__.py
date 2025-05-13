@@ -2,7 +2,11 @@
 
 # SPDX-License-Identifier: MIT
 
+import re
+
 from . import xray
+
+REVIEW_CLASS = re.compile("styles_reviewCardInner")
 
 
 def get_reviews(company_page, nreviews):
@@ -21,7 +25,7 @@ def get_reviews(company_page, nreviews):
     :rtype: list(dict(str,))
     """
 
-    review_tags = company_page.find_all(class_=xray.REVIEW_CLASS, limit=nreviews)
+    review_tags = company_page.find_all(class_=REVIEW_CLASS, limit=nreviews)
     reviews = [xray.extract_review_info(tag) for tag in review_tags]
     return reviews
 
@@ -43,7 +47,7 @@ def extract_info(source, with_reviews=False, nreviews=5):
     """
 
     with open(source, encoding="utf8") as f:
-        company_page = xray.parse_page(f, None)
+        company_page = xray.parse_page(f)
 
     company = xray.extract_company_info(company_page)
 
