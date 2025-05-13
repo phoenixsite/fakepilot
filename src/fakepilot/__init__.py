@@ -42,12 +42,14 @@ def get_reviews(company_page, nreviews):
     return reviews
 
 
-def extract_info(source, with_reviews=False, nreviews=5):
+def extract_info(source, encoding="utf-8", with_reviews=False, nreviews=5):
     """
     Return the information of a company page.
 
     :param source: Company's page of Trustpilot.
-    :type source: file-like
+    :type source: path-like
+    :param encoding: Encoding of ``source``.
+    :type encoding: str
     :param with_reviews: Indicates whether the company's reviews are
            extracted.
     :type with_reviews: bool, optional
@@ -68,7 +70,7 @@ def extract_info(source, with_reviews=False, nreviews=5):
     :rtype: dict(str, )
     """
 
-    with open(source, encoding="utf8") as f:
+    with open(source, encoding=encoding) as f:
         company_page = xray.parse_page(f)
 
     company = xray.extract_company_info(company_page)
