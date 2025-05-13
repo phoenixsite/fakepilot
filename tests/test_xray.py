@@ -45,7 +45,7 @@ class TestXray(unittest.TestCase):
         for filename in self.data.keys():
             source = os.path.join(data_dir, filename)
             with self.subTest(source=filename):
-                company = extract_info(source, True, 100)
+                company = extract_info(source, with_reviews=True, nreviews=100)
                 if not (company["score"] and company["nreviews"]):
                     company["score"] = dummy_score
                     company["nreviews"] = dummy_nreviews
