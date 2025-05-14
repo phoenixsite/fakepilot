@@ -26,10 +26,10 @@ fp.extract_info("tests/data/burgerking.no.html", with_reviews=True, 2)
 
 ## Installation
 
-fakepilot is available on Pypi. You can install it with
+fakepilot is available on [PyPI](https://pypi.org/project/fakepilot/). You can install it with
 
 ```bash
-pip install fakepilot
+python -m pip install fakepilot
 ```
 
 To install fakepilot from the GitHub source, clone the repository with `git`:
@@ -42,7 +42,7 @@ Then, change your current directory to the one you cloned and install it with `p
 
 ```bash
 cd fakepilot
-pip install .
+python -m pip install .
 ```
 
 ## Documentation
@@ -54,5 +54,6 @@ in ``docs`` with [Sphinx](https://www.sphinx-doc.org/en/master/):
 
 ```bash
 cd docs
+python -m pip install -r requirements.txt
 make html
 ```
