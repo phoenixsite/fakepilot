@@ -6,6 +6,7 @@ Tests the extraction of companies' attributes.
 
 import json
 import os
+from datetime import datetime
 import unittest
 from pathlib import Path
 
@@ -24,14 +25,19 @@ class TestXray(unittest.TestCase):
 
     def setUp(self):
         """
-        Create the real data and extract the information
-        from certain local HTML pages.
+        Create the real data and extract the information from certain local
+        HTML pages.
         """
 
         data_dir = os.path.join(BASE_DIR, "data")
 
         with open(os.path.join(data_dir, "valid_data.json"), encoding="utf-8") as f:
             self.data = json.load(f)
+
+        for _filename, company_data in self.data.items():
+            if "reviews" in company_data:
+                for review in company_data["reviews"]:
+                    review["date"] = datetime.fromisoformat(review["date"])
 
         # Dummy search_data. Because the tests pages are not
         # extracted from the search's result page, we cannot
@@ -106,3 +112,13 @@ class TestXray(unittest.TestCase):
         for filename, company in self.companies.items():
             with self.subTest(source=filename):
                 self.assertEqual(company["email"], self.data[filename]["email"])
+
+    def test_reviews(self):
+        """Test that some reviews are correctly extracted."""
+        for filename, company in self.companies.items():
+            if "reviews" in self.data[filename]:
+                with self.subTest(source=filename):
+                    # We probably have less reviews in the valid data
+                    # than extracted
+                    for review in self.data[filename]["reviews"]:
+                        self.assertIn(review, company["reviews"])

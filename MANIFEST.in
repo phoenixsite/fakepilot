@@ -3,8 +3,7 @@ include .editorconfig
 include README.md
 include .readthedocs.yaml
 include .pre-commit-config.yaml
-include .flake8
-include tox.ini
+include noxfile.py
 recursive-include docs *.rst *.py make.bat Makefile *.txt
 recursive-include tests *.py *.txt *.json
 recursive-include src *.py

@@ -18,25 +18,18 @@ repos:
     -   id: check-yaml
     -   id: debug-statements
     -   id: fix-byte-order-marker
-- repo: https://github.com/psf/black
-  rev: 24.10.0
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.11.8
   hooks:
-    - id: black
-      language_version: python3.13
-      name: black (Python formatter)
-- repo: https://github.com/pycqa/flake8
-  rev: 7.1.1
-  hooks:
-    - id: flake8
-      name: flake8 (Python linter)
+    - id: ruff
+    - id: ruff-format
 - repo: https://github.com/econchick/interrogate
   rev: 1.7.0
   hooks:
     - id: interrogate
       name: interrogate (Python docstring enforcer)
       args: [--verbose]
-- repo: https://github.com/pycqa/isort
-  rev: 5.13.2
+- repo: https://github.com/astral-sh/uv-pre-commit
+  rev: 0.7.4
   hooks:
-    - id: isort
-      name: isort (Python formatter)
+    - id: uv-lock

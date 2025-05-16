@@ -17,6 +17,11 @@ except ImportError:
     PARSER = "html.parser"
 
 
+def has_attr(attr_name):
+    """Return a function that checks if a tag has an attribute."""
+    return lambda tag: tag.has_attr(attr_name)
+
+
 def extract_url(tag):
     """
     Return the URL of the company.
@@ -54,8 +59,7 @@ def extract_rating_stats(tag):
 
     if not nreviews_tag:
         raise RuntimeError(
-            "The tag where the score and the number of reviews "
-            "are hasn't been found."
+            "The tag where the score and the number of reviews are hasn't been found."
         )
 
     nreviews = (
@@ -103,7 +107,6 @@ def extract_contact_info(tag):
         contact_elements = contact_elements[:-1]
 
     for contact_info in contact_elements:
-
         line = ",".join(contact_info.strings)
 
         if phone_re.search(line):
@@ -117,17 +120,11 @@ def extract_contact_info(tag):
 
 
 def extract_categories(tag):
-    """Return the company's category list."""
+    """
+    Return the company's category list.
+    """
 
-    def has_attr_data_business_unit_info_category_typography(tag):
-        """
-        Check if ``tag`` has the attribute
-        ``'data-business-unit-info-category-typography'``.
-        """
-
-        return tag.has_attr("data-business-unit-info-category-typography")
-
-    cat_refs = tag.find_all(has_attr_data_business_unit_info_category_typography)
+    cat_refs = tag.find_all(has_attr("data-business-unit-info-category-typography"))
     categories = [cat_tag.string for cat_tag in cat_refs]
 
     return categories
@@ -137,8 +134,8 @@ def parse_page(page):
     """
     Parse page with BeautifulSoup.
 
-    Set the ``lxml``'s parser if it is installed. If not,
-    the ``html.parser`` is used.
+    Set the ``lxml``'s parser if it is installed. If not, the ``html.parser``
+    is used.
 
     :param page: HTML document to be parsed.
     :type page: str
@@ -174,8 +171,11 @@ def extract_company_info(tag):
     }
 
 
-def extract_author_name(tag):
-    """Extract the review's author's name."""
+def extract_review_author_name(tag):
+    """
+    Extract the review's author's name.
+    """
+
     consumer_node = tag.find(attrs={"data-consumer-name-typography": "true"})
 
     if not consumer_node:
@@ -184,10 +184,10 @@ def extract_author_name(tag):
             present."""
         )
 
-    return consumer_node.string.title()
+    return consumer_node.string
 
 
-def extract_author_id(tag):
+def extract_review_author_id(tag):
     """Extract the review's author id."""
     consumer_node = tag.find(attrs={"data-consumer-profile-link": "true"})
 
@@ -197,52 +197,42 @@ def extract_author_id(tag):
             present."""
         )
 
-    return consumer_node.get("href").removeprefix("/users/")
+    # The author link is https://www.trustpilot.com/users/66642b4....954121bbb4cc643
+    return consumer_node.get("href").rsplit("/", 1)[-1]
 
 
-def extract_rating(tag):
+def extract_review_rating(tag):
     """Extract the rating in the review."""
 
-    def has_data_service_review_rating(inner_tag):
-        """
-        Check if the tag has the attribute ``'data-service-review-rating'``.
-        """
-        return inner_tag.has_attr("data-service-review-rating")
-
-    star_rating_node = tag.find(has_data_service_review_rating)
-    rating = float(star_rating_node.attrs["data-service-review-rating"])
-
-    return rating
+    attr_name = "data-service-review-rating"
+    star_rating_node = tag.find(has_attr(attr_name))
+    return float(star_rating_node.attrs[attr_name])
 
 
-def extract_date(tag):
+def extract_review_date(tag):
     """Extract the date the review was posted."""
     date_node = tag.find(attrs={"data-service-review-date-time-ago": "true"})
 
     if not date_node:
         raise ValueError("The tag where the review's date should be isn't present.")
 
-    return datetime.fromisoformat(date_node["datetime"].split(".")[0])
+    return datetime.fromisoformat(date_node["datetime"])
 
 
-def extract_content(tag):
+def extract_review_title(tag):
+    """Extract the title of the review."""
+    title_node = tag.find(has_attr("data-service-review-title-typography"))
+    return title_node.string
+
+
+def extract_review_content(tag):
     """
     Extract the content or body of the review.
 
     It is returned in Unicode encoding.
     """
-    content_node = tag.find(attrs={"data-service-review-text-typography": "true"})
 
-    if not content_node:
-
-        content_node = tag.find(
-            "h2", attrs={"data-service-review-title-typography": "true"}
-        )
-
-        if not content_node:
-            raise ValueError(
-                "The tag where the review's content should be isn't present."
-            )
+    content_node = tag.find(has_attr("data-service-review-text-typography"))
 
     if content_node.string:
         content = str(content_node.string)
@@ -251,15 +241,17 @@ def extract_content(tag):
         for string in content_node.strings:
             content += str(string)
 
+    content = content.replace("\n", "")
     return content
 
 
 def extract_review_info(tag):
     """Extract the review's data"""
     return {
-        "author_name": extract_author_name(tag),
-        "author_id": extract_author_id(tag),
-        "star_rating": extract_rating(tag),
-        "date": extract_date(tag),
-        "content": extract_content(tag),
+        "author_name": extract_review_author_name(tag),
+        "author_id": extract_review_author_id(tag),
+        "star_rating": extract_review_rating(tag),
+        "date": extract_review_date(tag),
+        "title": extract_review_title(tag),
+        "content": extract_review_content(tag),
     }

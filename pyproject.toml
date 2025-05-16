@@ -31,15 +31,26 @@ dependencies = [
 lxml = ["lxml"]
 
 [dependency-groups]
-tests = ["tox"]
+tests = ["nox"]
 
 [project.urls]
 Repository = "https://github.com/phoenixsite/fakepilot"
 Issues = "https://github.com/phoenixsite/fakepilot/issues"
 Documentation = "https://fakepilot.readthedocs.io/"
 
-[tool.black]
-target-version = ["py39", "py310", "py311", "py312", "py313"]
+[tool.ruff]
+line-length = 88
+indent-width = 4
+
+[tool.ruff.lint]
+select = ["C", "E", "F", "W", "B"]
+ignore = ["E203", "E501", "B008", "B904", "F401"]
+
+[tool.ruff.format]
+indent-style = "space"
+quote-style = "double"
+skip-magic-trailing-comma = false
+line-ending = "auto"
 
 [tool.coverage.paths]
 source = ["src", ".tox/3.*/**/site-packages/"]
@@ -62,9 +73,6 @@ fail-under = 100
 ignore-init-method = true
 ignore-init-module = true
 ignore-magic = true
-
-[tool.isort]
-profile = "black"
 
 [tool.pylint]
 disable = [

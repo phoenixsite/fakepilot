@@ -9,6 +9,7 @@ It is based on [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/).
 * Extract the information of a company from a Trustpilot page.
 * Obtain its reviews with a fine-grained detail.
 * The output data is structured in a simple dictionary.
+* Support for Trustpilot pages with different HTML structure.
 
 IMPORTANT: fakepilot now doesn't fetch the web pages from Trustpilot. This must be done by the user of the package.
 

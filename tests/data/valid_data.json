@@ -13,7 +13,17 @@
     "address": "calle albuñol nave 6 albolote,18220,granada,Spain",
     "phone": "+34958490405",
     "email": "info@beautytheshop.com",
-    "nreviews": 20
+    "nreviews": 20,
+    "reviews": [
+        {
+            "author_name": "SR JOSé JUAN LEAL BLANES",
+            "author_id": "62b825f93888b60012f7f8ca",
+            "star_rating": 5.0,
+            "date": "2024-06-11T16:08:24.000Z",
+            "title": "Rapidez y comodidad",
+            "content": "Es mi primera compra y me ha gustado la rapidez y la posibilidad de cambiar la dirección de entrega porque era fin de semana y me encontraba fuera del domicilio. Todavía no he probado el producto porque era un regalo para mí por mi aniversario.Tengo la app y ojalá pueda seguir comprando."
+        }
+    ]
   },
   "www.granada.no.txt": {
     "name": "Granada AS",
