@@ -37,7 +37,9 @@ class TestXray(unittest.TestCase):
         for _filename, company_data in self.data.items():
             if "reviews" in company_data:
                 for review in company_data["reviews"]:
-                    review["date"] = datetime.fromisoformat(review["date"])
+                    review["date"] = datetime.strptime(
+                        review["date"], "%Y-%m-%dT%H:%M:%S.%fZ"
+                    )
 
         # Dummy search_data. Because the tests pages are not
         # extracted from the search's result page, we cannot

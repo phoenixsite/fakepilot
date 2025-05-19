@@ -7,12 +7,12 @@ name = "fakepilot"
 description = "Scrapping tool for Trustpilot"
 version = "25.05.1"
 readme = "README.md"
-license = "MIT"
+license = {text = "MIT"}
 authors = [
-  { name = "Carlos Romero Cruz" },
+  { name = "Carlos Romero Cruz", email = "phoenixsitegit@outlook.com"},
 ]
 keywords = ["trustpilot", "scrapping", "beautifulsoup"]
-requires-python = ">=3.9"
+requires-python = ">=3.7"
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Programming Language :: Python :: 3",
@@ -82,3 +82,6 @@ disable = [
   "missing-module-docstring",
   "too-many-ancestors",
 ]
+
+[tool.check-manifest]
+ignore = ["uv.lock"]

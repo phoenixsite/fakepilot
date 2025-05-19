@@ -53,8 +53,20 @@ def clean(paths=ARTIFACT_PATHS):
     "python,bs4",
     [
         (python, bs4)
-        for python in ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        for python in [
+            "3.7",
+            "3.8",
+            "3.9",
+            "3.10",
+            "3.11",
+            "3.12",
+            "3.13",
+            "pypy-3.9",
+            "pypy-3.10",
+            "pypy3.11",
+        ]
         for bs4 in ["4.12", "4.13"]
+        # if (python, bs4) not in [("4.13")]
     ],
 )
 def tests_with_coverage(session, bs4):

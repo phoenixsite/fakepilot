@@ -216,13 +216,13 @@ def extract_review_date(tag):
     if not date_node:
         raise ValueError("The tag where the review's date should be isn't present.")
 
-    return datetime.fromisoformat(date_node["datetime"])
+    return datetime.strptime(date_node["datetime"], "%Y-%m-%dT%H:%M:%S.%fZ")
 
 
 def extract_review_title(tag):
     """Extract the title of the review."""
     title_node = tag.find(has_attr("data-service-review-title-typography"))
-    return title_node.string
+    return title_node.string.strip()
 
 
 def extract_review_content(tag):
@@ -232,16 +232,20 @@ def extract_review_content(tag):
     It is returned in Unicode encoding.
     """
 
-    content_node = tag.find(has_attr("data-service-review-text-typography"))
+    # print(tag.prettify())
+    content_node = tag.find(attrs={"data-service-review-text-typography": "true"})
 
-    if content_node.string:
-        content = str(content_node.string)
-    else:
+    if not content_node:
         content = ""
-        for string in content_node.strings:
-            content += str(string)
+    else:
+        if content_node.string:
+            content = str(content_node.string)
+        else:
+            content = ""
+            for string in content_node.strings:
+                content += str(string)
 
-    content = content.replace("\n", "")
+        content = content.replace("\n", "").strip()
     return content
 
 

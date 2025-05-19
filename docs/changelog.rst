@@ -14,6 +14,10 @@ Released May 2025
 
 * Added support for Trustpilot pages as of May 2025. The previous
   version only supports those from December 2023.
+* Fixed extracting the review when it does not have any content. Before,
+  because there is no content in the review, the content_node was not
+  found and trying to access the string attribute caused a Nonetype
+  exception.
 
 
 Version 25.05.0
