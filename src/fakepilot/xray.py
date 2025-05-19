@@ -35,10 +35,6 @@ def extract_url(tag):
     # For May 2025 pages
     business_url = tag.find(class_=re.compile("link_internal"))
 
-    # For Decemeber 2023 pages
-    if not business_url:
-        business_url = tag.find(class_=re.compile("styles_websiteUrl"))
-
     return "".join(business_url.strings)
 
 
@@ -177,25 +173,12 @@ def extract_review_author_name(tag):
     """
 
     consumer_node = tag.find(attrs={"data-consumer-name-typography": "true"})
-
-    if not consumer_node:
-        raise ValueError(
-            """The tag where the author's name should be isn't
-            present."""
-        )
-
     return consumer_node.string
 
 
 def extract_review_author_id(tag):
     """Extract the review's author id."""
     consumer_node = tag.find(attrs={"data-consumer-profile-link": "true"})
-
-    if not consumer_node:
-        raise ValueError(
-            """The tag where the author's id should be isn't
-            present."""
-        )
 
     # The author link is https://www.trustpilot.com/users/66642b4....954121bbb4cc643
     return consumer_node.get("href").rsplit("/", 1)[-1]
@@ -212,10 +195,6 @@ def extract_review_rating(tag):
 def extract_review_date(tag):
     """Extract the date the review was posted."""
     date_node = tag.find(attrs={"data-service-review-date-time-ago": "true"})
-
-    if not date_node:
-        raise ValueError("The tag where the review's date should be isn't present.")
-
     return datetime.strptime(date_node["datetime"], "%Y-%m-%dT%H:%M:%S.%fZ")
 
 

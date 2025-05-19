@@ -63,7 +63,7 @@ def clean(paths=ARTIFACT_PATHS):
             "3.13",
             "pypy-3.9",
             "pypy-3.10",
-            "pypy3.11",
+            # "pypy3.11",
         ]
         for bs4 in ["4.12", "4.13"]
         # if (python, bs4) not in [("4.13")]
@@ -76,7 +76,7 @@ def tests_with_coverage(session, bs4):
 
     session.install(
         f"beautifulsoup4~={bs4}",
-        ".[lxml]",
+        ".",
         "coverage",
         'tomli; python_full_version < "3.11.0a7"',
     )
@@ -112,6 +112,27 @@ def coverage_report(session):
     session.run("python", "-Im", "coverage", "combine")
     session.run("python", "-Im", "coverage", "report", "--show-missing")
     session.run("python", "-Im", "coverage", "erase")
+
+
+@nox.session(python=["3.12"], tags=["tests"])
+def tests_with_lxml(session):
+    """
+    Run the package's unit tests using the parser lxml.
+    """
+
+    session.install(
+        "beautifulsoup4~=4.12",
+        ".[lxml]",
+        'tomli; python_full_version < "3.11.0a7"',
+    )
+    session.run(
+        os.path.join(session.bin, "python"),
+        "-Wonce::DeprecationWarning",
+        "-m",
+        "unittest",
+        "discover",
+    )
+    clean()
 
 
 # Tasks which test the package's documentation.

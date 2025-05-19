@@ -83,9 +83,6 @@ class TestXray(unittest.TestCase):
         for filename, company in self.companies.items():
             categories = company["categories"]
 
-            if not categories:
-                categories = [None]
-
             with self.subTest(source=filename):
                 self.assertEqual(categories, self.data[filename]["categories"])
 
