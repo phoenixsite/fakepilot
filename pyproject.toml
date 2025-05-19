@@ -53,7 +53,7 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 
 [tool.coverage.paths]
-source = ["src", ".tox/3.*/**/site-packages/"]
+source = ["src", ".nox/3.*/**/site-packages/"]
 
 [tool.coverage.report]
 exclude_lines = [
