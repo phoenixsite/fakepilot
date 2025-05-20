@@ -191,6 +191,9 @@ def extract_company_info(tag):
     """Extract the data of a company."""
     try:
         nreviews, score = extract_rating_stats(tag)
+    # On old Trsutpilot pages, if the company closed
+    # then the company's page does not show the score or
+    # number of reviews
     except RuntimeError:
         score = nreviews = None
 

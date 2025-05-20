@@ -34,11 +34,17 @@ class TestXray(unittest.TestCase):
         data_dir = os.path.join(BASE_DIR, "data")
         cls.temp_dir = os.path.join(data_dir, ".tmp/")
 
+        # Read the real data file
         with open(os.path.join(data_dir, "valid_data.json"), encoding="utf-8") as f:
             cls.data = json.load(f)
 
+        # Extract the HTML test files
         shutil.unpack_archive(os.path.join(data_dir, "text_files.zip"), cls.temp_dir)
 
+        # Apply some modifications to the data from the JSON file.
+        # For example, the Python date/datetime object cannot be
+        # directly derived with the json.load method; it has to be
+        # done manually
         for _filename, company_data in cls.data.items():
             # We need to cast the string number, which is the key
             # of the dict, into an int
@@ -63,28 +69,15 @@ class TestXray(unittest.TestCase):
                     if "is_verified" not in review:
                         review["is_verified"] = False
 
-        # Dummy search_data. Because the tests pages are not
-        # extracted from the search's result page, we cannot
-        # extract from there the score and nreviews from that
-        # page, so we provide dummy data
-        dummy_score = 2.5
-        dummy_nreviews = 21
-
         cls.companies = {}
 
+        # Parse the test files
         for filename in cls.data.keys():
             source = os.path.join(cls.temp_dir, filename)
             with open(source, "r", encoding="utf-8") as file:
                 cls.companies[filename] = extract_info(
                     file, with_reviews=True, nreviews=100
                 )
-
-            if not (
-                cls.companies[filename]["score"] and cls.companies[filename]["nreviews"]
-            ):
-                cls.companies[filename]["score"] = dummy_score
-                cls.companies[filename]["nreviews"] = dummy_nreviews
-
             cls.companies[filename] = cls.companies[filename]
 
     @classmethod

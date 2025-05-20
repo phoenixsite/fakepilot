@@ -117,10 +117,7 @@
   },
   "elejidoshopping.es.txt": {
     "name": "elejidoshopping",
-    "rating_stats": [
-      21,
-      2.5
-    ],
+    "rating_stats": [null, null],
     "categories": [],
     "address": null,
     "phone": null,
