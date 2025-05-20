@@ -233,8 +233,25 @@ def extract_number_reviews_author(tag):
     """
 
     attr = "data-consumer-reviews-count"
-    content_node = tag.find(has_attr(attr))
-    return int(content_node.attrs[attr])
+    nreviews_node = tag.find(has_attr(attr))
+    return int(nreviews_node.attrs[attr])
+
+
+def extract_authors_country(tag):
+    """
+    Extract the country where the author is from.
+    """
+
+    country_node = tag.find(attrs={"data-consumer-country-typography": "true"})
+
+    if country_node.string:
+        country = str(country_node.string)
+    else:
+        country = ""
+        for string in country_node.strings:
+            country += str(string)
+
+    return country
 
 
 def extract_review_info(tag):
@@ -247,4 +264,5 @@ def extract_review_info(tag):
         "title": extract_review_title(tag),
         "content": extract_review_content(tag),
         "nreviews": extract_number_reviews_author(tag),
+        "country": extract_authors_country(tag),
     }
