@@ -6,6 +6,7 @@ Tests the extraction of companies' attributes.
 
 import json
 import os
+import shutil
 from datetime import datetime
 import unittest
 from pathlib import Path
@@ -23,18 +24,22 @@ class TestXray(unittest.TestCase):
 
     # pylint: disable=consider-iterating-dictionary
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         """
         Create the real data and extract the information from certain local
         HTML pages.
         """
 
         data_dir = os.path.join(BASE_DIR, "data")
+        cls.temp_dir = os.path.join(data_dir, ".tmp/")
 
         with open(os.path.join(data_dir, "valid_data.json"), encoding="utf-8") as f:
-            self.data = json.load(f)
+            cls.data = json.load(f)
 
-        for _filename, company_data in self.data.items():
+        shutil.unpack_archive(os.path.join(data_dir, "text_files.zip"), cls.temp_dir)
+
+        for _filename, company_data in cls.data.items():
             # We need to cast the string number, which is the key
             # of the dict, into an int
             if "rating_distribution" in company_data:
@@ -65,24 +70,29 @@ class TestXray(unittest.TestCase):
         dummy_score = 2.5
         dummy_nreviews = 21
 
-        self.companies = {}
+        cls.companies = {}
 
-        for filename in self.data.keys():
-            source = os.path.join(data_dir, filename)
-            with self.subTest(source=filename):
-                with open(source, "r", encoding="utf-8") as file:
-                    self.companies[filename] = extract_info(
-                        file, with_reviews=True, nreviews=100
-                    )
+        for filename in cls.data.keys():
+            source = os.path.join(cls.temp_dir, filename)
+            with open(source, "r", encoding="utf-8") as file:
+                cls.companies[filename] = extract_info(
+                    file, with_reviews=True, nreviews=100
+                )
 
-                if not (
-                    self.companies[filename]["score"]
-                    and self.companies[filename]["nreviews"]
-                ):
-                    self.companies[filename]["score"] = dummy_score
-                    self.companies[filename]["nreviews"] = dummy_nreviews
+            if not (
+                cls.companies[filename]["score"] and cls.companies[filename]["nreviews"]
+            ):
+                cls.companies[filename]["score"] = dummy_score
+                cls.companies[filename]["nreviews"] = dummy_nreviews
 
-                self.companies[filename] = self.companies[filename]
+            cls.companies[filename] = cls.companies[filename]
+
+    @classmethod
+    def tearDownClass(cls):
+        """Remove the extracted text files."""
+        if os.path.exists(cls.temp_dir):
+            shutil.rmtree(cls.temp_dir)
+            cls.temp_dir = None
 
     def test_extract_name(self):
         """Test that the name is correctly extracted"""
