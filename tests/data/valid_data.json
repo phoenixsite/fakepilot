@@ -23,7 +23,8 @@
             "title": "Rapidez y comodidad",
             "content": "Es mi primera compra y me ha gustado la rapidez y la posibilidad de cambiar la dirección de entrega porque era fin de semana y me encontraba fuera del domicilio. Todavía no he probado el producto porque era un regalo para mí por mi aniversario.Tengo la app y ojalá pueda seguir comprando.",
             "nreviews": 2,
-            "country": "ES"
+            "country": "ES",
+            "date_experience": "June 10, 2024"
         }
     ]
   },
@@ -256,5 +257,33 @@
     "email": null,
     "phone": null,
     "nreviews": 1
+  },
+  "sumeria.eu.txt": {
+    "name": "Sumeria",
+    "rating_stats": [
+      16327,
+      4.4
+    ],
+    "categories": [
+      "Bank"
+    ],
+    "address": "France",
+    "phone": null,
+    "email": "support@sumeria.eu",
+    "nreviews": 20,
+    "reviews": [
+        {
+            "author_name": "Adeel",
+            "author_id": "68298a574db5a004f7fbfc82",
+            "star_rating": 5.0,
+            "date": "2025-05-18T09:20:56.000Z",
+            "title": "I am very happy thank you so much",
+            "content": "I am very happy thank you so much",
+            "nreviews": 1,
+            "country": "FR",
+            "date_experience": "May 17, 2025",
+            "is_verified": true
+        }
+    ]
   }
 }

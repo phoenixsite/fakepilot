@@ -41,6 +41,14 @@ class TestXray(unittest.TestCase):
                         review["date"], "%Y-%m-%dT%H:%M:%S.%fZ"
                     )
 
+                    if "date_experience" in review:
+                        review["date_experience"] = datetime.strptime(
+                            review["date_experience"], "%B %d, %Y"
+                        )
+
+                    if "is_verified" not in review:
+                        review["is_verified"] = False
+
         # Dummy search_data. Because the tests pages are not
         # extracted from the search's result page, we cannot
         # extract from there the score and nreviews from that

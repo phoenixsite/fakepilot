@@ -5,7 +5,9 @@ Defines how the data is scrapped from the Trustpilot site.
 # SPDX-License-Identifier: MIT
 
 import re
-from datetime import datetime
+import datetime
+from functools import reduce
+import operator
 
 from bs4 import BeautifulSoup
 
@@ -168,10 +170,7 @@ def extract_company_info(tag):
 
 
 def extract_review_author_name(tag):
-    """
-    Extract the review's author's name.
-    """
-
+    """Extract the review's author's name."""
     consumer_node = tag.find(attrs={"data-consumer-name-typography": "true"})
     return consumer_node.string
 
@@ -186,7 +185,6 @@ def extract_review_author_id(tag):
 
 def extract_review_rating(tag):
     """Extract the rating in the review."""
-
     attr_name = "data-service-review-rating"
     star_rating_node = tag.find(has_attr(attr_name))
     return float(star_rating_node.attrs[attr_name])
@@ -195,13 +193,29 @@ def extract_review_rating(tag):
 def extract_review_date(tag):
     """Extract the date the review was posted."""
     date_node = tag.find(attrs={"data-service-review-date-time-ago": "true"})
-    return datetime.strptime(date_node["datetime"], "%Y-%m-%dT%H:%M:%S.%fZ")
+    return datetime.datetime.strptime(date_node["datetime"], "%Y-%m-%dT%H:%M:%S.%fZ")
 
 
 def extract_review_title(tag):
     """Extract the title of the review."""
     title_node = tag.find(has_attr("data-service-review-title-typography"))
     return title_node.string.strip()
+
+
+def concat_strings(node):
+    """
+    Concat the strings contained in ``node`` as a unique and complete string.
+
+    We need to check if there is just one or more strings. In case of the
+    latter, then we need to concate them.
+    See https://www.crummy.com/software/BeautifulSoup/bs4/doc/#string
+    """
+
+    if node.string:
+        concat_string = str(node.string)
+    else:
+        concat_string = reduce(operator.add, node.strings)
+    return concat_string
 
 
 def extract_review_content(tag):
@@ -216,14 +230,9 @@ def extract_review_content(tag):
     if not content_node:
         content = ""
     else:
-        if content_node.string:
-            content = str(content_node.string)
-        else:
-            content = ""
-            for string in content_node.strings:
-                content += str(string)
-
+        content = concat_strings(content_node)
         content = content.replace("\n", "").strip()
+
     return content
 
 
@@ -243,15 +252,30 @@ def extract_authors_country(tag):
     """
 
     country_node = tag.find(attrs={"data-consumer-country-typography": "true"})
-
-    if country_node.string:
-        country = str(country_node.string)
-    else:
-        country = ""
-        for string in country_node.strings:
-            country += str(string)
-
+    country = concat_strings(country_node)
     return country
+
+
+def extract_date_experience(tag):
+    """
+    Extract the date of experience of the review.
+    """
+
+    exp_node = tag.find(
+        attrs={"data-service-review-date-of-experience-typography": "true"}
+    )
+    exp_date_str = concat_strings(exp_node)
+    exp_date_str = exp_date_str.split(":")[-1].strip()
+    return datetime.datetime.strptime(exp_date_str, "%B %d, %Y")
+
+
+def extract_is_verified(tag):
+    """
+    Extract if the review is verified.
+    """
+
+    ver_node = tag.find(attrs={"data-review-label-tooltip-trigger-typography": "true"})
+    return True if ver_node else False
 
 
 def extract_review_info(tag):
@@ -259,10 +283,12 @@ def extract_review_info(tag):
     return {
         "author_name": extract_review_author_name(tag),
         "author_id": extract_review_author_id(tag),
+        "is_verified": extract_is_verified(tag),
         "star_rating": extract_review_rating(tag),
         "date": extract_review_date(tag),
         "title": extract_review_title(tag),
         "content": extract_review_content(tag),
         "nreviews": extract_number_reviews_author(tag),
         "country": extract_authors_country(tag),
+        "date_experience": extract_date_experience(tag),
     }

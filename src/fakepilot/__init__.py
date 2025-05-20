@@ -67,8 +67,9 @@ def extract_info(source, encoding="utf-8", with_reviews=False, nreviews=5):
             in Trustpilot, rating (``'star_rating'``),
             date of publication (``'date'``), the text content
             (``'content'``), the number of reviews made by the author of the
-            review (``'nreviews'``) and the country that the author is from
-            (``'country'``).
+            review (``'nreviews'``), the country that the author is from
+            (``'country'``), the date of experience (``'date_experience'``)
+            and if the review is verified (``'is_verified'``).
     :rtype: dict(str, )
     """
 
