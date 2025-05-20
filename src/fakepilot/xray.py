@@ -211,7 +211,6 @@ def extract_review_content(tag):
     It is returned in Unicode encoding.
     """
 
-    # print(tag.prettify())
     content_node = tag.find(attrs={"data-service-review-text-typography": "true"})
 
     if not content_node:
@@ -228,6 +227,16 @@ def extract_review_content(tag):
     return content
 
 
+def extract_number_reviews_author(tag):
+    """
+    Extract the number of reviews made by the author of the current review.
+    """
+
+    attr = "data-consumer-reviews-count"
+    content_node = tag.find(has_attr(attr))
+    return int(content_node.attrs[attr])
+
+
 def extract_review_info(tag):
     """Extract the review's data"""
     return {
@@ -237,4 +246,5 @@ def extract_review_info(tag):
         "date": extract_review_date(tag),
         "title": extract_review_title(tag),
         "content": extract_review_content(tag),
+        "nreviews": extract_number_reviews_author(tag),
     }
