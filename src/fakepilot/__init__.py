@@ -16,7 +16,7 @@ def get_reviews(company_page, nreviews):
 
     :param company_page: HTML company's page where the reviews are extracted
            from.
-    :type company_page: :class:`bs4.Tag`
+    :type company_page: :class:`bs4.BeautifulSoup`
     :param nreviews: Number of reviews to be extracted.
     :type nreviews: int
     :return: Reviews of a company.
@@ -42,14 +42,12 @@ def get_reviews(company_page, nreviews):
     return reviews
 
 
-def extract_info(source, encoding="utf-8", with_reviews=False, nreviews=5):
+def extract_info(file, with_reviews=False, nreviews=5):
     """
     Return the information of a company page.
 
-    :param source: Company's page of Trustpilot.
-    :type source: path-like
-    :param encoding: Encoding of ``source``.
-    :type encoding: str
+    :param file: Company's page of Trustpilot.
+    :type file: file object
     :param with_reviews: Indicates whether the company's reviews are
            extracted.
     :type with_reviews: bool, optional
@@ -75,9 +73,7 @@ def extract_info(source, encoding="utf-8", with_reviews=False, nreviews=5):
     :rtype: dict(str, )
     """
 
-    with open(source, encoding=encoding) as f:
-        company_page = xray.parse_page(f)
-
+    company_page = xray.parse_page(file)
     company = xray.extract_company_info(company_page)
 
     if with_reviews:

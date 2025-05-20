@@ -2,5 +2,3 @@
 
 Main functionality
 ==================
-
-.. autofunction:: fakepilot.extract_info

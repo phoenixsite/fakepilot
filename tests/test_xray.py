@@ -61,12 +61,19 @@ class TestXray(unittest.TestCase):
         for filename in self.data.keys():
             source = os.path.join(data_dir, filename)
             with self.subTest(source=filename):
-                company = extract_info(source, with_reviews=True, nreviews=100)
-                if not (company["score"] and company["nreviews"]):
-                    company["score"] = dummy_score
-                    company["nreviews"] = dummy_nreviews
+                with open(source, "r", encoding="utf-8") as file:
+                    self.companies[filename] = extract_info(
+                        file, with_reviews=True, nreviews=100
+                    )
 
-                self.companies[filename] = company
+                if not (
+                    self.companies[filename]["score"]
+                    and self.companies[filename]["nreviews"]
+                ):
+                    self.companies[filename]["score"] = dummy_score
+                    self.companies[filename]["nreviews"] = dummy_nreviews
+
+                self.companies[filename] = self.companies[filename]
 
     def test_extract_name(self):
         """Test that the name is correctly extracted"""

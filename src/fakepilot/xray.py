@@ -134,7 +134,7 @@ def extract_is_claimed(tag):
     """
 
     claimed_tag = tag.find(string=re.compile("Claimed profile"))
-    return True if claimed_tag else False
+    return bool(claimed_tag)
 
 
 def parse_page(page):
@@ -150,11 +150,7 @@ def parse_page(page):
     :rtype: :class:`bs4.BeautifulSoup`
     """
 
-    return BeautifulSoup(
-        page,
-        PARSER,
-        from_encoding="utf-8",
-    )
+    return BeautifulSoup(page, PARSER)
 
 
 def extract_company_info(tag):
@@ -214,10 +210,11 @@ def extract_review_title(tag):
 
 def concat_strings(node):
     """
-    Concat the strings contained in ``node`` as a unique and complete string.
+    Concatenate the strings contained in ``node`` as a unique and complete
+    string.
 
     We need to check if there is just one or more strings. In case of the
-    latter, then we need to concate them.
+    latter, then we need to concatenate them.
     See https://www.crummy.com/software/BeautifulSoup/bs4/doc/#string
     """
 
@@ -285,7 +282,7 @@ def extract_is_verified(tag):
     """
 
     ver_node = tag.find(attrs={"data-review-label-tooltip-trigger-typography": "true"})
-    return True if ver_node else False
+    return bool(ver_node)
 
 
 def extract_review_info(tag):
