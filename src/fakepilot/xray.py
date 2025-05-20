@@ -137,6 +137,40 @@ def extract_is_claimed(tag):
     return bool(claimed_tag)
 
 
+def extract_percentage_stars(tag):
+    """
+    Extract the percentage of reviews that the company has received for each
+    rating (1 star, 2 stars, etc.).
+    """
+
+    rating_dist_str = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5}
+    rating_dist = dict(
+        zip(range(1, len(rating_dist_str.keys()) + 1), [None] * len(rating_dist_str))
+    )
+
+    # The rating distribution information is in a side panel. Also,
+    # there are other tags in the page with the attributes data-star-rating,
+    # so that's why we need to get first the side panel
+    side_info_tag = tag.find(class_=re.compile("styles_businessInfoSideBar"))
+
+    if side_info_tag:
+        for number_stars_str, nstars in rating_dist_str.items():
+            rating_tag = side_info_tag.find(
+                attrs={"data-star-rating": number_stars_str}
+            )
+
+            if rating_tag:
+                bar_tag = rating_tag.find(
+                    class_=re.compile("rating-distribution-row_barValue")
+                )
+                percentage = bar_tag.attrs["style"].split(":")[-1].rstrip("%")
+                rating_dist[nstars] = float(percentage)
+
+    if any(rating_dist):
+        return rating_dist
+    return None
+
+
 def parse_page(page):
     """
     Parse page with BeautifulSoup.
@@ -172,6 +206,7 @@ def extract_company_info(tag):
         "phone": phone,
         "address": address,
         "is_claimed": extract_is_claimed(tag),
+        "rating_distribution": extract_percentage_stars(tag),
     }
 
 

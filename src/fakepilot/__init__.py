@@ -59,7 +59,8 @@ def extract_info(file, with_reviews=False, nreviews=5):
             score (``'address'``) and if the company's profile is claimed
             (``'is_claimed'``) by the company. The categories, email
             (``'email'``),
-            phone number (``'phone'``) and address (``'address'``) are
+            phone number (``'phone'``), address (``'address'``) and
+            rating distribution (``'rating_distribution'``) are
             also included if they are on the page. In case of the reviews,
             which are included under the key ``'reviews'``, for each
             one the returned values are the author's name (``'author_name'``),

@@ -35,6 +35,15 @@ class TestXray(unittest.TestCase):
             self.data = json.load(f)
 
         for _filename, company_data in self.data.items():
+            # We need to cast the string number, which is the key
+            # of the dict, into an int
+            if "rating_distribution" in company_data:
+                new_rating_dist = {}
+                for key in company_data["rating_distribution"].keys():
+                    new_rating_dist[int(key)] = company_data["rating_distribution"][key]
+
+                company_data["rating_distribution"] = new_rating_dist
+
             if "reviews" in company_data:
                 for review in company_data["reviews"]:
                     review["date"] = datetime.strptime(
@@ -134,6 +143,16 @@ class TestXray(unittest.TestCase):
                 with self.subTest(source=filename):
                     self.assertEqual(
                         company["is_claimed"], self.data[filename]["is_claimed"]
+                    )
+
+    def test_rating_distribution(self):
+        """Test that the rating distribution is extracted."""
+        for filename, company in self.companies.items():
+            if "rating_distribution" in self.data[filename]:
+                with self.subTest(source=filename):
+                    self.assertEqual(
+                        company["rating_distribution"],
+                        self.data[filename]["rating_distribution"],
                     )
 
     def test_reviews(self):

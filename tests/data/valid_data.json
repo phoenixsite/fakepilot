@@ -271,6 +271,13 @@
     "phone": null,
     "email": "support@sumeria.eu",
     "nreviews": 20,
+    "rating_distribution": {
+        "1": 9.364855760396889,
+        "2": 2.0150670668218287,
+        "3": 3.8586390641269066,
+        "4": 14.840448337110306,
+        "5": 69.92098977154407
+    },
     "reviews": [
         {
             "author_name": "Adeel",
