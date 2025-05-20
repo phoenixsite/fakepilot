@@ -58,7 +58,9 @@ def extract_info(source, encoding="utf-8", with_reviews=False, nreviews=5):
     :type nreviews: int, optional
     :return: Company's information: name (``'name'``), URL (``'url'``),
             number of reviews in Trustpilot (``'nreviews'``),
-            and score (``'address'``). The categories, email (``'email'``),
+            score (``'address'``) and if the company's profile is claimed
+            (``'is_claimed'``) by the company. The categories, email
+            (``'email'``),
             phone number (``'phone'``) and address (``'address'``) are
             also included if they are on the page. In case of the reviews,
             which are included under the key ``'reviews'``, for each

@@ -128,6 +128,15 @@ def extract_categories(tag):
     return categories
 
 
+def extract_is_claimed(tag):
+    """
+    Indicate if the Trustpilot company's page is claimed by the company.
+    """
+
+    claimed_tag = tag.find(string=re.compile("Claimed profile"))
+    return True if claimed_tag else False
+
+
 def parse_page(page):
     """
     Parse page with BeautifulSoup.
@@ -166,6 +175,7 @@ def extract_company_info(tag):
         "email": email,
         "phone": phone,
         "address": address,
+        "is_claimed": extract_is_claimed(tag),
     }
 
 

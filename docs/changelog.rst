@@ -10,6 +10,8 @@ of ``fakepilot``.
 Version 25.05.2
 ~~~~~~~~~~~~~~~
 
+Currently under development.
+
 * Fixed extracting the review when it does not have any content. Before,
   because there is no content in the review, the content_node was not
   found and trying to access the string attribute caused a Nonetype

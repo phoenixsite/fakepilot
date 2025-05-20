@@ -120,6 +120,15 @@ class TestXray(unittest.TestCase):
             with self.subTest(source=filename):
                 self.assertEqual(company["email"], self.data[filename]["email"])
 
+    def test_is_claimed(self):
+        """Test that the ``is_claimed`` property is correctly extracted."""
+        for filename, company in self.companies.items():
+            if "is_claimed" in self.data[filename]:
+                with self.subTest(source=filename):
+                    self.assertEqual(
+                        company["is_claimed"], self.data[filename]["is_claimed"]
+                    )
+
     def test_reviews(self):
         """Test that some reviews are correctly extracted."""
         for filename, company in self.companies.items():
