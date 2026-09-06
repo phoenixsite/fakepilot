@@ -1,7 +1,7 @@
 [![CI](https://github.com/phoenixsite/fakepilot/actions/workflows/ci.yml/badge.svg)](https://github.com/phoenixsite/fakepilot/actions?query=workflow%3ACI)
 
 
-[Trustpilot](https://www.trustpilot.com/) scrapping Python package.
+[Trustpilot](https://www.trustpilot.com/) scraping Python package.
 Extract online business reviews and integrate it on your code.
 It is based on [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/).
 

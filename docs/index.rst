@@ -3,7 +3,7 @@
 fakepilot's |release|
 =====================
 
-``fakepilot`` |release| is a Python package for scrapping data from the `Trustpilot web page
+``fakepilot`` |release| is a Python package for scraping data from the `Trustpilot web page
 <https://www.trustpilot.com/>`_.
 
 

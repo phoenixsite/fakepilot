@@ -1,4 +1,4 @@
-"""Trustpilot scrapping Python package"""
+"""Trustpilot scraping Python package"""
 
 # SPDX-License-Identifier: MIT
 
