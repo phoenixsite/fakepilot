@@ -5,8 +5,8 @@ Tests the extraction of companies' attributes.
 # SPDX-License-Identifier: MIT
 
 import json
-import os
 import shutil
+import tempfile
 from datetime import datetime
 import unittest
 from pathlib import Path
@@ -31,15 +31,18 @@ class TestXray(unittest.TestCase):
         HTML pages.
         """
 
-        data_dir = os.path.join(BASE_DIR, "data")
-        cls.temp_dir = os.path.join(data_dir, ".tmp/")
+        # pylint: disable=consider-using-with
+
+        data_dir = Path(BASE_DIR, "data")
+        cls._temp_dir = tempfile.TemporaryDirectory()
+        cls.temp_dir = Path(cls._temp_dir.name)
 
         # Read the real data file
-        with open(os.path.join(data_dir, "valid_data.json"), encoding="utf-8") as f:
+        with open(data_dir / "valid_data.json", encoding="utf-8") as f:
             cls.data = json.load(f)
 
         # Extract the HTML test files
-        shutil.unpack_archive(os.path.join(data_dir, "text_files.zip"), cls.temp_dir)
+        shutil.unpack_archive(data_dir / "text_files.zip", cls.temp_dir)
 
         # Apply some modifications to the data from the JSON file.
         # For example, the Python date/datetime object cannot be
@@ -73,8 +76,7 @@ class TestXray(unittest.TestCase):
 
         # Parse the test files
         for filename in cls.data.keys():
-            source = os.path.join(cls.temp_dir, filename)
-            with open(source, "r", encoding="utf-8") as file:
+            with open(cls.temp_dir / filename, "r", encoding="utf-8") as file:
                 cls.companies[filename] = extract_info(
                     file, with_reviews=True, nreviews=100
                 )
@@ -83,9 +85,7 @@ class TestXray(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         """Remove the extracted text files."""
-        if os.path.exists(cls.temp_dir):
-            shutil.rmtree(cls.temp_dir)
-            cls.temp_dir = None
+        cls._temp_dir.cleanup()
 
     def test_extract_name(self):
         """Test that the name is correctly extracted"""
