@@ -51,7 +51,7 @@
             python-version: ${{ matrix.python-version }}
 
         - name: Run tests
-          run: "uvx nox --non-interactive --error-on-external-run --tag tests --python ${{ matrix.python-version }}"
+          run: "uvx nox --non-interactive --error-on-external-run --tags tests --python ${{ matrix.python-version }}"
 
         - name: Upload coverage data
           uses: actions/upload-artifact@v4
@@ -119,7 +119,7 @@
             python-version: "3.12"
 
         - name: Run documentation checks
-          run: "uvx nox --non-interactive --error-on-external-run --tag docs"
+          run: "uvx nox --non-interactive --error-on-external-run --tags docs"
 
 
     lint-format:
@@ -141,9 +141,9 @@
             python-version: "3.13"
 
         - name: Check code formatting
-          run: "uvx nox --non-interactive --error-on-external-run --tag formatters --python 3.13"
+          run: "uvx nox --non-interactive --error-on-external-run --tags formatters --python 3.13"
         - name: Lint code
-          run: "uvx nox --non-interactive --error-on-external-run --tag linters --python 3.13"
+          run: "uvx nox --non-interactive --error-on-external-run --tags linters --python 3.13"
 
 
     check-package:
@@ -165,7 +165,7 @@
             python-version: "3.12"
 
         - name: Check package
-          run: "uvx nox --non-interactive --error-on-external-run --tag packaging --python 3.13"
+          run: "uvx nox --non-interactive --error-on-external-run --tags packaging --python 3.13"
 
 
     required-checks-pass:
