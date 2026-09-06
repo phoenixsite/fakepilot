@@ -7,7 +7,8 @@ name = "fakepilot"
 description = "Scraping tool for Trustpilot"
 version = "25.05.1"
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [
   { name = "Carlos Romero Cruz", email = "phoenixsitegit@outlook.com"},
 ]
@@ -16,6 +17,7 @@ requires-python = ">=3.7"
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
@@ -28,10 +30,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-lxml = ["lxml"]
+performance = ["lxml"]
 
 [dependency-groups]
-tests = ["nox"]
+dev = ["nox"]
 
 [project.urls]
 Repository = "https://github.com/phoenixsite/fakepilot"
@@ -44,13 +46,13 @@ indent-width = 4
 
 [tool.ruff.lint]
 select = ["C", "E", "F", "W", "B"]
-ignore = ["E203", "E501", "B008", "B904", "F401"]
+ignore = ["E203", "B008", "B904"]
 
 [tool.ruff.format]
 indent-style = "space"
 quote-style = "double"
 skip-magic-trailing-comma = false
-line-ending = "auto"
+line-ending = "lf"
 
 [tool.coverage.paths]
 source = ["src", ".nox/tests_with_coverage*/**/site-packages/"]

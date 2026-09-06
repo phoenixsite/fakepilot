@@ -54,19 +54,14 @@ def clean(paths=ARTIFACT_PATHS):
     [
         (python, bs4)
         for python in [
-            "3.7",
             "3.8",
             "3.9",
-            "3.10",
             "3.11",
-            "3.12",
-            "3.13",
+            "3.14",
             "pypy-3.9",
-            "pypy-3.10",
-            # "pypy3.11",
+            "pypy-3.11",
         ]
-        for bs4 in ["4.12", "4.13"]
-        # if (python, bs4) not in [("4.13")]
+        for bs4 in ["4.12", "4.15"]
     ],
 )
 def tests_with_coverage(session, bs4):
@@ -87,8 +82,6 @@ def tests_with_coverage(session, bs4):
         "-m",
         "coverage",
         "run",
-        "--source",
-        PACKAGE_NAME,
         "-m",
         "unittest",
         "discover",
@@ -122,7 +115,7 @@ def tests_with_lxml(session):
 
     session.install(
         "beautifulsoup4~=4.12",
-        ".[lxml]",
+        ".[performance]",
         'tomli; python_full_version < "3.11.0a7"',
     )
     session.run(

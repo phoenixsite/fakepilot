@@ -111,12 +111,12 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
-lxml = [
+performance = [
     { name = "lxml" },
 ]
 
 [package.dev-dependencies]
-tests = [
+dev = [
     { name = "nox", version = "2024.4.15", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.8'" },
     { name = "nox", version = "2025.5.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.8'" },
 ]
@@ -124,12 +124,12 @@ tests = [
 [package.metadata]
 requires-dist = [
     { name = "beautifulsoup4", specifier = ">=4.12" },
-    { name = "lxml", marker = "extra == 'lxml'" },
+    { name = "lxml", marker = "extra == 'performance'" },
 ]
-provides-extras = ["lxml"]
+provides-extras = ["performance"]
 
 [package.metadata.requires-dev]
-tests = [{ name = "nox" }]
+dev = [{ name = "nox" }]
 
 [[package]]
 name = "filelock"
