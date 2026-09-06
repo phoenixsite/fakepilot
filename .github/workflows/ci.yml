@@ -23,9 +23,6 @@
         - uses: hynek/build-and-inspect-python-package@v2
           id: baipp
 
-      outputs:
-        python-versions: ${{ steps.baipp.outputs.supported_python_classifiers_json_array }}
-
     tests:
       name: Tests on Python ${{ matrix.python-version }}
       needs: build-package
@@ -33,7 +30,13 @@
       strategy:
         fail-fast: false
         matrix:
-          python-version: ${{ fromJson(needs.build-package.outputs.python-versions) }}
+          python-version:
+            - "3.8"
+            - "3.9"
+            - "3.11"
+            - "3.14"
+            - "pypy-3.9"
+            - "pypy-3.11"
 
       steps:
         - name: Download pre-built packages
@@ -162,7 +165,7 @@
         - name: Install uv and set the python version
           uses: astral-sh/setup-uv@v5
           with:
-            python-version: "3.12"
+            python-version: "3.13"
 
         - name: Check package
           run: "uvx nox --non-interactive --error-on-external-run --tags packaging --python 3.13"

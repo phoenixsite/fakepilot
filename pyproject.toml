@@ -7,8 +7,7 @@ name = "fakepilot"
 description = "Scraping tool for Trustpilot"
 version = "25.05.1"
 readme = "README.md"
-license = "MIT"
-license-files = ["LICENSE"]
+license = {text = "MIT"}
 authors = [
   { name = "Carlos Romero Cruz", email = "phoenixsitegit@outlook.com"},
 ]
