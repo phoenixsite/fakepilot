@@ -129,3 +129,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Extracted test pages (the tracked source is tests/data/text_files.zip)
+tests/data/text_files/
