@@ -21,9 +21,23 @@ some of the company's reviews to be extracted.
 
 ```python
 import fakepilot as fp
-fp.extract_info("tests/data/burgerking.no.html")
-fp.extract_info("tests/data/burgerking.no.html", with_reviews=True, 2)
+
+# Company information only
+with open("company_page.html", encoding="utf-8") as page:
+    company = fp.extract_info(page)
+
+# Company information plus its first 2 reviews
+with open("company_page.html", encoding="utf-8") as page:
+    company = fp.extract_info(page, with_reviews=True, nreviews=2)
+
+print(company["name"], company["score"], company["nreviews"])
+print(company["reviews"][0]["title"])
 ```
+
+``extract_info`` expects an open file (or a string with the HTML content),
+not a path. ``company_page.html`` is a company's Trustpilot page that you
+have saved yourself, e.g. ``https://www.trustpilot.com/review/<company-domain>``
+saved from your browser.
 
 ## Installation
 
