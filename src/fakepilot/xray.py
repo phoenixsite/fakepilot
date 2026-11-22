@@ -86,7 +86,8 @@ def extract_contact_info(tag):
     # As the address field does not have a specific structure,
     # the other two are searched and the last one would the
     # address field
-    phone_re = re.compile(r"^\+?\d[\d-]+")
+    # Phone numbers can be written like +34 600-000-000 or (855) 470-1527
+    phone_re = re.compile(r"^\s*\+?\(?\d[\d\s().-]{4,}\d\s*$")
     email_re = re.compile(
         r"([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+"
     )
@@ -123,7 +124,14 @@ def extract_categories(tag):
     """
 
     cat_refs = tag.find_all(has_attr("data-business-unit-info-category-typography"))
-    categories = [cat_tag.string for cat_tag in cat_refs]
+    categories = []
+
+    for cat_tag in cat_refs:
+        # On 2026 pages, if the company is ranked in a category, the tag
+        # contains a text like "#4 of 7 best companies in <a>Category</a>",
+        # so the category's name is the text of the link
+        name_tag = cat_tag.find("a") or cat_tag
+        categories.append(name_tag.get_text().strip())
 
     return categories
 
