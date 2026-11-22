@@ -76,7 +76,9 @@ class TestXray(unittest.TestCase):
 
         # Parse the test files
         for filename in cls.data.keys():
-            with open(cls.temp_dir / filename, "r", encoding="utf-8") as file:
+            with open(
+                cls.temp_dir / "text_files" / filename, "r", encoding="utf-8"
+            ) as file:
                 cls.companies[filename] = extract_info(
                     file, with_reviews=True, nreviews=100
                 )

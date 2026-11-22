@@ -21,7 +21,7 @@
             "star_rating": 5.0,
             "date": "2024-06-11T16:08:24.000Z",
             "title": "Rapidez y comodidad",
-            "content": "Es mi primera compra y me ha gustado la rapidez y la posibilidad de cambiar la dirección de entrega porque era fin de semana y me encontraba fuera del domicilio. Todavía no he probado el producto porque era un regalo para mí por mi aniversario.Tengo la app y ojalá pueda seguir comprando.",
+            "content": "Es\n mi primera compra y me ha gustado la rapidez y la posibilidad de \ncambiar la dirección de entrega porque era fin de semana y me encontraba\n fuera del domicilio. Todavía no he probado el producto porque era un \nregalo para mí por mi aniversario.Tengo la app y ojalá pueda seguir \ncomprando.",
             "nreviews": 2,
             "country": "ES",
             "date_experience": "June 10, 2024"
@@ -282,11 +282,124 @@
             "star_rating": 5.0,
             "date": "2025-05-18T09:20:56.000Z",
             "title": "I am very happy thank you so much",
-            "content": "I am very happy thank you so much",
+            "content": "I am very happy thank you so much ",
             "nreviews": 1,
             "country": "FR",
             "date_experience": "May 17, 2025",
             "is_verified": true
+        }
+    ]
+  },
+  "www.burgerking.dk_2026.txt": {
+    "name": "Burger King",
+    "rating_stats": [
+      5053,
+      2.5
+    ],
+    "categories": [
+      "Restaurant",
+      "Fast Food Restaurant",
+      "Hamburger Restaurant",
+      "Take Away Service"
+    ],
+    "address": null,
+    "phone": null,
+    "email": null,
+    "nreviews": 20,
+    "rating_distribution": {
+        "1": 65.03067484662577,
+        "2": 7.02552938848209,
+        "3": 2.889372649910944,
+        "4": 3.483079358796754,
+        "5": 21.571343756184444
+    },
+    "reviews": [
+        {
+            "author_name": "Ian Hume",
+            "author_id": "5fd8fc73c839220019eab499",
+            "star_rating": 1.0,
+            "date": "2026-09-02T18:59:57.000Z",
+            "title": "Southampton Burgate restaurant 24 hrs on the John",
+            "content": "Southampton Burgate restaurant Visited yesterday and should have followed my gut instinct when mett with dirty doors on entrance dirty tables full of rubbish and when ordering on the dirty screen no receipt so didnt know order number as was expecting a ticket ! Then when order recognised we had to go to a DIY drinks machine which was only dispensing one type of drink as the other 8 were out had to go see staff who came out and confirmed the others were not available! We settled for not what we wanted ! The food was luke warm chips undercooked and the cheese sauce with bacon bits was terrible as were the burgers .I had diarrhea now for over 24 hours that says it all.ive tried to complain on the burger king website which is tailored for basic one item dissatisfaction not the whole experiance with no answer from them id say whatever you memory of Burger king dont bother! I always thought of it as the M&S of burger joints  sad to say not any more ",
+            "nreviews": 4,
+            "country": "GB",
+            "date_experience": "September 1, 2026",
+            "is_verified": false
+        }
+    ]
+  },
+  "infragantia.com_2026.txt": {
+    "name": "Perfumeria Online Infragantia",
+    "rating_stats": [
+      12,
+      4.3
+    ],
+    "categories": [
+      "Perfume Store"
+    ],
+    "address": "Calle Mayor, 103, 46550, ALBUIXECH - VALENCIA, Spain",
+    "phone": "675753763",
+    "email": "info@infragantia.com",
+    "nreviews": 10,
+    "rating_distribution": {
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 8.333333333333332,
+        "5": 91.66666666666666
+    },
+    "reviews": [
+        {
+            "author_name": "Consumer",
+            "author_id": "62f769d40a12820012760163",
+            "star_rating": 5.0,
+            "date": "2023-10-20T19:59:08.000Z",
+            "title": "Seriedad",
+            "content": "Buena calidad-precio y entrega rápida y correcta, según previsión",
+            "nreviews": 10,
+            "country": "ES",
+            "date_experience": "October 16, 2023",
+            "is_verified": true
+        }
+    ]
+  },
+  "guestreservations.com_2026.txt": {
+    "name": "Guest Reservations",
+    "rating_stats": [
+      68849,
+      3.9
+    ],
+    "categories": [
+      "Travel Agency",
+      "Group Accommodation",
+      "Hotel",
+      "Lodging",
+      "Resort",
+      "Travel Aggregator"
+    ],
+    "address": "United States",
+    "phone": "(855) 470-1527",
+    "email": "customercare@guestreservations.com",
+    "nreviews": 20,
+    "rating_distribution": {
+        "1": 15.345175674301734,
+        "2": 3.2839983151534518,
+        "3": 6.790222080204505,
+        "4": 12.846954930354833,
+        "5": 61.733648999985476
+    },
+    "reviews": [
+        {
+            "author_name": "Lauren McNamara",
+            "author_id": "6a9d78b4186db6423b3ae7df",
+            "star_rating": 1.0,
+            "date": "2026-09-06T16:29:20.000Z",
+            "title": "Horrible predatory company",
+            "content": "Horrible predatory company. Mimic real websites to trick you into buying through them. ",
+            "nreviews": 1,
+            "country": "IE",
+            "date_experience": "September 6, 2026",
+            "is_verified": false
         }
     ]
   }

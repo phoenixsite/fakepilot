@@ -4,7 +4,13 @@
 
 import re
 
-from . import xray
+from fakepilot import xray
+from fakepilot.xray import (
+    extract_review_info_v1,
+    extract_review_info_v2,
+    parse_company_v1,
+    parse_company_v2,
+)
 
 
 def get_reviews(company_page, nreviews):
@@ -38,7 +44,11 @@ def get_reviews(company_page, nreviews):
     review_tags = reviews_section.find_all(
         has_attr_data_service_review_card_paper, limit=nreviews
     )
-    reviews = [xray.extract_review_info(tag) for tag in review_tags]
+
+    try:
+        reviews = [extract_review_info_v1(tag) for tag in review_tags]
+    except RuntimeError:
+        reviews = [extract_review_info_v2(tag) for tag in review_tags]
     return reviews
 
 
@@ -75,7 +85,11 @@ def extract_info(file, with_reviews=False, nreviews=5):
     """
 
     company_page = xray.parse_page(file)
-    company = xray.extract_company_info(company_page)
+
+    try:
+        company = parse_company_v2(company_page)
+    except Exception:
+        company = parse_company_v1(company_page)
 
     if with_reviews:
         company["reviews"] = get_reviews(company_page, nreviews)

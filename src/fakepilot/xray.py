@@ -45,7 +45,7 @@ def extract_company_name(tag):
     return next(tag.find(class_=re.compile("title_displayName")).strings)
 
 
-def extract_rating_stats(tag):
+def extract_rating_stats_v1(tag):
     """
     Extract the number of reviews and the TrustScore.
 
@@ -195,10 +195,10 @@ def parse_page(page):
     return BeautifulSoup(page, PARSER)
 
 
-def extract_company_info(tag):
+def parse_company_v1(tag):
     """Extract the data of a company."""
     try:
-        nreviews, score = extract_rating_stats(tag)
+        nreviews, score = extract_rating_stats_v1(tag)
     # On old Trsutpilot pages, if the company closed
     # then the company's page does not show the score or
     # number of reviews
@@ -221,13 +221,13 @@ def extract_company_info(tag):
     }
 
 
-def extract_review_author_name(tag):
+def extract_review_author_name_v1(tag):
     """Extract the review's author's name."""
     consumer_node = tag.find(attrs={"data-consumer-name-typography": "true"})
     return consumer_node.string
 
 
-def extract_review_author_id(tag):
+def extract_review_author_id_v1(tag):
     """Extract the review's author id."""
     consumer_node = tag.find(attrs={"data-consumer-profile-link": "true"})
 
@@ -235,20 +235,20 @@ def extract_review_author_id(tag):
     return consumer_node.get("href").rsplit("/", 1)[-1]
 
 
-def extract_review_rating(tag):
+def extract_review_rating_v1(tag):
     """Extract the rating in the review."""
     attr_name = "data-service-review-rating"
     star_rating_node = tag.find(has_attr(attr_name))
     return float(star_rating_node.attrs[attr_name])
 
 
-def extract_review_date(tag):
+def extract_review_date_v1(tag):
     """Extract the date the review was posted."""
     date_node = tag.find(attrs={"data-service-review-date-time-ago": "true"})
     return datetime.datetime.strptime(date_node["datetime"], "%Y-%m-%dT%H:%M:%S.%fZ")
 
 
-def extract_review_title(tag):
+def extract_review_title_v1(tag):
     """Extract the title of the review."""
     title_node = tag.find(has_attr("data-service-review-title-typography"))
     return title_node.string.strip()
@@ -271,7 +271,7 @@ def concat_strings(node):
     return concat_string
 
 
-def extract_review_content(tag):
+def extract_review_content_v1(tag):
     """
     Extract the content or body of the review.
 
@@ -283,13 +283,14 @@ def extract_review_content(tag):
     if not content_node:
         content = ""
     else:
-        content = concat_strings(content_node)
-        content = content.replace("\n", "").strip()
+        # content = concat_strings(content_node)
+        # content = content.replace("\n", "").strip()
+        content = content_node.get_text()
 
     return content
 
 
-def extract_number_reviews_author(tag):
+def extract_number_reviews_author_v1(tag):
     """
     Extract the number of reviews made by the author of the current review.
     """
@@ -299,17 +300,21 @@ def extract_number_reviews_author(tag):
     return int(nreviews_node.attrs[attr])
 
 
-def extract_authors_country(tag):
+def extract_authors_country_v1(tag):
     """
     Extract the country where the author is from.
     """
 
     country_node = tag.find(attrs={"data-consumer-country-typography": "true"})
+
+    if not country_node:
+        raise RuntimeError("The tag containing the review's country hasn't been found.")
+
     country = concat_strings(country_node)
     return country
 
 
-def extract_date_experience(tag):
+def extract_date_experience_v1(tag):
     """
     Extract the date of experience of the review.
     """
@@ -317,12 +322,18 @@ def extract_date_experience(tag):
     exp_node = tag.find(
         attrs={"data-service-review-date-of-experience-typography": "true"}
     )
+
+    if not exp_node:
+        raise RuntimeError(
+            "The tag containing the review's experience date was not found."
+        )
+
     exp_date_str = concat_strings(exp_node)
     exp_date_str = exp_date_str.split(":")[-1].strip()
     return datetime.datetime.strptime(exp_date_str, "%B %d, %Y")
 
 
-def extract_is_verified(tag):
+def extract_is_verified_v1(tag):
     """
     Extract if the review is verified.
     """
@@ -331,17 +342,104 @@ def extract_is_verified(tag):
     return bool(ver_node)
 
 
-def extract_review_info(tag):
+def extract_review_info_v1(tag):
     """Extract the review's data"""
     return {
-        "author_name": extract_review_author_name(tag),
-        "author_id": extract_review_author_id(tag),
-        "is_verified": extract_is_verified(tag),
-        "star_rating": extract_review_rating(tag),
-        "date": extract_review_date(tag),
-        "title": extract_review_title(tag),
-        "content": extract_review_content(tag),
-        "nreviews": extract_number_reviews_author(tag),
-        "country": extract_authors_country(tag),
-        "date_experience": extract_date_experience(tag),
+        "author_name": extract_review_author_name_v1(tag),
+        "author_id": extract_review_author_id_v1(tag),
+        "is_verified": extract_is_verified_v1(tag),
+        "star_rating": extract_review_rating_v1(tag),
+        "date": extract_review_date_v1(tag),
+        "title": extract_review_title_v1(tag),
+        "content": extract_review_content_v1(tag),
+        "nreviews": extract_number_reviews_author_v1(tag),
+        "country": extract_authors_country_v1(tag),
+        "date_experience": extract_date_experience_v1(tag),
+    }
+
+
+def extract_rating_stats_v2(tag):
+    """
+    Extract the number of reviews and the TrustScore.
+
+    Both attributes are extracted simultaneously because they
+    are in the same tag.
+    """
+
+    nreviews_tag = tag.find(class_=re.compile(r"^styles_allReviewsHeading"))
+
+    if not nreviews_tag:
+        raise RuntimeError(
+            "The tag where the score and the number of reviews are hasn't been found."
+        )
+
+    nreviews_str = nreviews_tag.get_text()
+    match = re.search(r"\(([\d,]+)\)", nreviews_str)
+
+    # The thousand separator is different for some countries
+    nreviews = re.sub(r"[.,\xa0]", "", match.group(1))
+    score_tag = tag.find(attrs={"data-rating-typography": "true"})
+    score = score_tag.string.replace(",", ".")
+    return (int(nreviews), float(score))
+
+
+def parse_company_v2(tag):
+    """Extract the data of a company."""
+
+    nreviews, score = extract_rating_stats_v2(tag)
+    phone, email, address = extract_contact_info(tag)
+
+    return {
+        "name": extract_company_name(tag),
+        "url": extract_url(tag),
+        "nreviews": nreviews,
+        "score": score,
+        "categories": extract_categories(tag),
+        "email": email,
+        "phone": phone,
+        "address": address,
+        "is_claimed": extract_is_claimed(tag),
+        "rating_distribution": extract_percentage_stars(tag),
+    }
+
+
+def extract_date_experience_v2(tag):
+    """
+    Extract the date of experience of the review.
+    """
+
+    exp_node = tag.find(attrs={"data-testid": "review-badge-date"})
+
+    if not exp_node:
+        raise RuntimeError(
+            "The tag containing the review's experience date was not found (v2)."
+        )
+
+    exp_date_str = concat_strings(exp_node)
+    exp_date_str = exp_date_str.split(":")[-1].strip()
+    return datetime.datetime.strptime(exp_date_str, "%B %d, %Y")
+
+
+def extract_is_verified_v2(tag):
+    """
+    Extract if the review is verified.
+    """
+
+    ver_node = tag.find(class_=re.compile(r"^styles_reviewLabels"))
+    return bool(ver_node)
+
+
+def extract_review_info_v2(tag):
+    """Extract the review's data"""
+    return {
+        "author_name": extract_review_author_name_v1(tag),
+        "author_id": extract_review_author_id_v1(tag),
+        "is_verified": extract_is_verified_v2(tag),
+        "star_rating": extract_review_rating_v1(tag),
+        "date": extract_review_date_v1(tag),
+        "title": extract_review_title_v1(tag),
+        "content": extract_review_content_v1(tag),
+        "nreviews": extract_number_reviews_author_v1(tag),
+        "country": extract_authors_country_v1(tag),
+        "date_experience": extract_date_experience_v2(tag),
     }
