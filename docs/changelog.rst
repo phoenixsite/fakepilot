@@ -15,6 +15,10 @@ Released November 2026
 * Added support for Trustpilot pages as of 2026. Pages with the previous
   layouts are still supported.
 
+* Fixed extracting ``url``, which was always an empty string. It is the
+  domain that identifies the company in Trustpilot, e.g.
+  ``www.burgerking.dk``.
+
 * Fixed extracting the categories in which the company is ranked. Before,
   ``None`` was returned for each of them.
 

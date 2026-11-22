@@ -1,6 +1,7 @@
 {
   "beautytheshop.com.txt": {
     "name": "BeautyTheShop",
+    "url": "beautytheshop.com",
     "rating_stats": [
       2989,
       4.4
@@ -30,6 +31,7 @@
   },
   "www.granada.no.txt": {
     "name": "Granada AS",
+    "url": "www.granada.no",
     "rating_stats": [
       1,
       3.7
@@ -49,6 +51,7 @@
   },
   "djmania.es.txt": {
     "name": "DJMania.es",
+    "url": "djmania.es",
     "rating_stats": [
       52,
       2.3
@@ -63,6 +66,7 @@
   },
   "www.burgerking.dk.txt": {
     "name": "Burger King",
+    "url": "www.burgerking.dk",
     "rating_stats": [
       3205,
       1.9
@@ -77,6 +81,7 @@
   },
   "burgerking.no.txt": {
     "name": "Burger King",
+    "url": "burgerking.no",
     "rating_stats": [
       99,
       2.3
@@ -89,6 +94,7 @@
   },
   "www.burgerking.fr.txt": {
     "name": "BURGER KING FRANCE",
+    "url": "www.burgerking.fr",
     "rating_stats": [
       775,
       3.1
@@ -103,6 +109,7 @@
   },
   "twenix.es.txt": {
     "name": "Twenix",
+    "url": "twenix.es",
     "rating_stats": [
       85,
       4.4
@@ -117,6 +124,7 @@
   },
   "elejidoshopping.es.txt": {
     "name": "elejidoshopping",
+    "url": "elejidoshopping.es",
     "rating_stats": [null, null],
     "categories": [],
     "address": null,
@@ -126,6 +134,7 @@
   },
   "beautytheshop.com_2025.txt": {
     "name": "BeautyTheShop",
+    "url": "beautytheshop.com",
     "rating_stats": [
       3498,
       4.3
@@ -142,6 +151,7 @@
   },
   "www.granada.no_2025.txt": {
     "name": "Granada AS",
+    "url": "www.granada.no",
     "rating_stats": [
       1,
       3.7
@@ -161,6 +171,7 @@
   },
   "djmania.es_2025.txt": {
     "name": "DJMania",
+    "url": "djmania.es",
     "rating_stats": [
       194,
       3.9
@@ -178,6 +189,7 @@
   },
   "www.burgerking.dk_2025.txt": {
     "name": "Burger King",
+    "url": "www.burgerking.dk",
     "rating_stats": [
       3996,
       2.2
@@ -195,6 +207,7 @@
   },
   "burgerking.no_2025.txt": {
     "name": "Burger King",
+    "url": "burgerking.no",
     "rating_stats": [
       333,
       3.9
@@ -212,6 +225,7 @@
   },
   "www.burgerking.fr_2025.txt": {
     "name": "BURGER KING FRANCE",
+    "url": "www.burgerking.fr",
     "rating_stats": [
       1484,
       3.5
@@ -227,6 +241,7 @@
   },
   "twenix.es_2025.txt": {
     "name": "Twenix",
+    "url": "twenix.es",
     "rating_stats": [
       129,
       4.4
@@ -241,6 +256,7 @@
   },
   "elejidoshopping.es_2025.txt": {
     "name": "elejidoshopping",
+    "url": "elejidoshopping.es",
     "rating_stats": [
       23,
       3.0
@@ -257,6 +273,7 @@
   },
   "sumeria.eu.txt": {
     "name": "Sumeria",
+    "url": "sumeria.eu",
     "rating_stats": [
       16327,
       4.4
@@ -292,6 +309,7 @@
   },
   "www.burgerking.dk_2026.txt": {
     "name": "Burger King",
+    "url": "www.burgerking.dk",
     "rating_stats": [
       5053,
       2.5
@@ -330,6 +348,7 @@
   },
   "infragantia.com_2026.txt": {
     "name": "Perfumeria Online Infragantia",
+    "url": "infragantia.com",
     "rating_stats": [
       12,
       4.3
@@ -365,6 +384,7 @@
   },
   "guestreservations.com_2026.txt": {
     "name": "Guest Reservations",
+    "url": "guestreservations.com",
     "rating_stats": [
       68849,
       3.9

@@ -95,6 +95,12 @@ class TestXray(unittest.TestCase):
             with self.subTest(source=filename):
                 self.assertEqual(company["name"], self.data[filename]["name"])
 
+    def test_extract_url(self):
+        """Test that the company's URL in Trustpilot is correctly extracted"""
+        for filename, company in self.companies.items():
+            with self.subTest(source=filename):
+                self.assertEqual(company["url"], self.data[filename]["url"])
+
     def test_extract_rating_stats(self):
         """Test that the number of reviews and score are correctly extracted"""
         for filename, company in self.companies.items():

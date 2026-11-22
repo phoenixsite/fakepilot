@@ -52,6 +52,18 @@ class TestMissingTags(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             xray.extract_rating_stats_v2(page)
 
+    def test_missing_url(self):
+        """Without the page's URL there is no company's URL."""
+        self.assertIsNone(xray.extract_url(parse(EMPTY_PAGE)))
+
+    def test_url_from_canonical_link(self):
+        """The URL is also taken from the canonical link."""
+        page = parse(
+            '<head><link rel="canonical" '
+            'href="https://es.trustpilot.com/review/company.es?page=2"></head>'
+        )
+        self.assertEqual(xray.extract_url(page), "company.es")
+
     def test_no_rating_distribution(self):
         """Without the side bar there is no rating distribution."""
         self.assertIsNone(xray.extract_percentage_stars(parse(EMPTY_PAGE)))

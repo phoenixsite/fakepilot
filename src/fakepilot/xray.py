@@ -32,12 +32,22 @@ def extract_url(tag):
     a company. However, they aren't normalized. Sometimes they can be
     ``www.company-site.es`` or ``company-site.es``. URL of the company
     as it is stored in Trustpilot.
+
+    It is taken from the URL of the page, which is
+    ``https://www.trustpilot.com/review/<company URL>``.
     """
 
-    # For May 2025 pages
-    business_url = tag.find(class_=re.compile("link_internal"))
+    for attrs, url_attr in (
+        ({"property": "og:url"}, "content"),
+        ({"rel": "canonical"}, "href"),
+    ):
+        url_tag = tag.find(["meta", "link"], attrs=attrs)
 
-    return "".join(business_url.strings)
+        if url_tag and "/review/" in url_tag.get(url_attr, ""):
+            page_url = url_tag[url_attr].split("?")[0].split("#")[0]
+            return page_url.split("/review/", 1)[1].strip("/")
+
+    return None
 
 
 def extract_company_name(tag):

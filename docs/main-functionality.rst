@@ -62,8 +62,8 @@ Those fields that aren't shown on the page are ``None``, except
 Key                      Type               Description
 ======================== ================== ==============================================
 ``name``                 ``str``            Name of the company.
-``url``                  ``str``            Website of the company, as registered in
-                                            Trustpilot.
+``url``                  ``str``            Domain that identifies the company in
+                                            Trustpilot, e.g. ``www.burgerking.dk``.
 ``nreviews``             ``int``            Number of reviews of the company.
 ``score``                ``float``          TrustScore of the company.
 ``categories``           ``list[str]``      Categories the company belongs to.
