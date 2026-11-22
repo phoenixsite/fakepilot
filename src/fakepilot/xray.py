@@ -376,6 +376,11 @@ def extract_rating_stats_v2(tag):
     nreviews_str = nreviews_tag.get_text()
     match = re.search(r"\(([\d,]+)\)", nreviews_str)
 
+    if not match:
+        raise RuntimeError(
+            "The number of reviews hasn't been found in the reviews heading."
+        )
+
     # The thousand separator is different for some countries
     nreviews = re.sub(r"[.,\xa0]", "", match.group(1))
     score_tag = tag.find(attrs={"data-rating-typography": "true"})

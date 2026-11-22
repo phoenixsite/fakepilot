@@ -86,9 +86,11 @@ def extract_info(file, with_reviews=False, nreviews=5):
 
     company_page = xray.parse_page(file)
 
+    # The current page layout is tried first. If it isn't recognized,
+    # the older layouts are used.
     try:
         company = parse_company_v2(company_page)
-    except Exception:
+    except RuntimeError:
         company = parse_company_v1(company_page)
 
     if with_reviews:
