@@ -174,7 +174,7 @@ def extract_percentage_stars(tag):
                 percentage = bar_tag.attrs["style"].split(":")[-1].rstrip("%")
                 rating_dist[nstars] = float(percentage)
 
-    if any(rating_dist):
+    if any(percentage is not None for percentage in rating_dist.values()):
         return rating_dist
     return None
 
