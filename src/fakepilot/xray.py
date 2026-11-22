@@ -14,7 +14,7 @@ from bs4 import BeautifulSoup
 try:
     import lxml  # noqa: F401  # pylint: disable=unused-import
 
-    PARSER = "lxml"
+    PARSER = "lxml"  # pragma: no cover (depends on the optional lxml)
 except ImportError:
     PARSER = "html.parser"
 
