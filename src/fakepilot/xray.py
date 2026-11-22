@@ -6,8 +6,6 @@ Defines how the data is scrapped from the Trustpilot site.
 
 import re
 import datetime
-from functools import reduce
-import operator
 
 from bs4 import BeautifulSoup
 
@@ -52,7 +50,7 @@ def extract_url(tag):
 
 def extract_company_name(tag):
     """Return the name of the company."""
-    return next(tag.find(class_=re.compile("title_displayName")).strings)
+    return str(next(tag.find(class_=re.compile("title_displayName")).strings))
 
 
 def extract_rating_stats_v1(tag):
@@ -234,7 +232,7 @@ def parse_company_v1(tag):
 def extract_review_author_name_v1(tag):
     """Extract the review's author's name."""
     consumer_node = tag.find(attrs={"data-consumer-name-typography": "true"})
-    return consumer_node.string
+    return consumer_node.get_text()
 
 
 def extract_review_author_id_v1(tag):
@@ -272,13 +270,12 @@ def concat_strings(node):
     We need to check if there is just one or more strings. In case of the
     latter, then we need to concatenate them.
     See https://www.crummy.com/software/BeautifulSoup/bs4/doc/#string
+
+    The result is a plain ``str``, not a :class:`bs4.NavigableString`, so it
+    doesn't keep a reference to the whole parsed page.
     """
 
-    if node.string:
-        concat_string = str(node.string)
-    else:
-        concat_string = reduce(operator.add, node.strings)
-    return concat_string
+    return "".join(node.strings)
 
 
 def extract_review_content_v1(tag):
@@ -339,7 +336,7 @@ def extract_date_experience_v1(tag):
         )
 
     exp_date_str = concat_strings(exp_node)
-    exp_date_str = exp_date_str.split(":")[-1].strip()
+    exp_date_str = exp_date_str.rsplit(":", maxsplit=1)[-1].strip()
     return datetime.datetime.strptime(exp_date_str, "%B %d, %Y")
 
 
@@ -431,7 +428,7 @@ def extract_date_experience_v2(tag):
         )
 
     exp_date_str = concat_strings(exp_node)
-    exp_date_str = exp_date_str.split(":")[-1].strip()
+    exp_date_str = exp_date_str.rsplit(":", maxsplit=1)[-1].strip()
     return datetime.datetime.strptime(exp_date_str, "%B %d, %Y")
 
 

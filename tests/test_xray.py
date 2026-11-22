@@ -95,6 +95,27 @@ class TestXray(unittest.TestCase):
             with self.subTest(source=filename):
                 self.assertEqual(company["name"], self.data[filename]["name"])
 
+    def test_plain_strings(self):
+        """
+        Test that the extracted strings are plain ``str`` and not
+        BeautifulSoup's strings, which keep a reference to the whole page.
+        """
+
+        def check(value, path):
+            """Check recursively that the strings in ``value`` are ``str``."""
+            if isinstance(value, str):
+                self.assertIs(type(value), str, path)
+            elif isinstance(value, dict):
+                for key, item in value.items():
+                    check(item, f"{path}.{key}")
+            elif isinstance(value, list):
+                for item in value:
+                    check(item, f"{path}[]")
+
+        for filename, company in self.companies.items():
+            with self.subTest(source=filename):
+                check(company, "company")
+
     def test_extract_url(self):
         """Test that the company's URL in Trustpilot is correctly extracted"""
         for filename, company in self.companies.items():

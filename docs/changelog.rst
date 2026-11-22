@@ -31,6 +31,10 @@ Released November 2026
 
 * ``extract_info`` no longer hides unexpected errors when parsing a page.
 
+* The company's name and the author's name and country of the reviews are
+  now plain ``str``. Before, they were BeautifulSoup's strings, which keep
+  a reference to the whole parsed page in memory.
+
 * Fixed extracting the review when it does not have any content. Before,
   because there is no content in the review, the content_node was not
   found and trying to access the string attribute caused a Nonetype
