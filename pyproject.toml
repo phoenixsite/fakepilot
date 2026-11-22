@@ -5,14 +5,14 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "fakepilot"
 description = "Scraping tool for Trustpilot"
-version = "25.05.1"
+version = "2026.9.0"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
   { name = "Carlos Romero Cruz", email = "phoenixsitegit@outlook.com"},
 ]
 keywords = ["trustpilot", "scraping", "beautifulsoup"]
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Programming Language :: Python :: 3",
