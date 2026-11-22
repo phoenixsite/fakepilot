@@ -72,3 +72,18 @@ cd docs
 python -m pip install -r requirements.txt
 make html
 ```
+
+## Disclaimer
+
+fakepilot is an independent project and is not affiliated with, endorsed by
+or sponsored by Trustpilot. "Trustpilot" is a trademark of its respective owner.
+
+fakepilot only parses HTML pages that you have already obtained; it does not
+download anything from Trustpilot. You are solely responsible for how you
+obtain those pages and for how you use the extracted data, including complying
+with [Trustpilot's Terms of Use](https://legal.trustpilot.com/for-everyone/terms-of-use-for-consumers)
+and any applicable law (for example, data protection regulations such as the GDPR
+when handling reviewers' information).
+
+This software is provided "as is", without warranty of any kind, as stated in
+the [LICENSE](LICENSE).
