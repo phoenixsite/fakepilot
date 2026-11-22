@@ -5,17 +5,58 @@ on:
     tags:
       - "[0-9]+.[0-9]+.[0-9]+"
 
-permissions:
-  contents: write
+permissions: { }
 
 jobs:
-  release:
-    name: Build and publish release
+  ci:
+    name: Run CI
+    uses: ./.github/workflows/ci.yml
+
+  check-version:
+    name: Check tag matches package version
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Compare tag and pyproject.toml version
+        run: |
+          python - <<'EOF'
+          import os
+          import sys
+          import tomllib
+
+          with open("pyproject.toml", "rb") as f:
+              version = tomllib.load(f)["project"]["version"]
+
+          tag = os.environ["GITHUB_REF_NAME"]
+
+          if tag != version:
+              sys.exit(
+                  f"Tag '{tag}' does not match the version in pyproject.toml ('{version}')"
+              )
+
+          print(f"Tag and package version match: {version}")
+          EOF
+
+  build:
+    name: Build distributions
+    needs: [ ci, check-version ]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Install Python
         uses: actions/setup-python@v5
@@ -27,14 +68,55 @@ jobs:
           python -m pip install build
           python -m build
 
+      - name: Upload distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    # Must match the environment configured as Trusted Publisher on PyPI
+    environment:
+      name: pypi
+      url: https://pypi.org/project/fakepilot/
+    permissions:
+      # Required for PyPI Trusted Publishing (OIDC)
+      id-token: write
+
+    steps:
+      - name: Download distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  github-release:
+    name: Create GitHub Release
+    needs: publish-pypi
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
           gh release create "${GITHUB_REF_NAME}" \
             --title "${GITHUB_REF_NAME}" \
             --generate-notes \
             dist/*
-
-      - name: Publish distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
