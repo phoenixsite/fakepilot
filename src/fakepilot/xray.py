@@ -12,7 +12,7 @@ import operator
 from bs4 import BeautifulSoup
 
 try:
-    import lxml  # pylint: disable=unused-import
+    import lxml  # noqa: F401  # pylint: disable=unused-import
 
     PARSER = "lxml"
 except ImportError:
